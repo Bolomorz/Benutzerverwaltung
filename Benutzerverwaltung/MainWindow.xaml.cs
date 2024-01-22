@@ -24,5 +24,10 @@ namespace Benutzerverwaltung
         {
             InitializeComponent();
         }
+
+        private void ClickVWB(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }

@@ -5,11 +5,34 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Benutzerverwaltung"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid x:Name="MainGrid" ShowGridLines="True">
+        Title="MainWindow" Height="400" Width="800">
+    <Grid x:Name="MainGrid">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="2*"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Grid.Column="1" Grid.Row="0" Margin="5, 5, 5, 5" VerticalAlignment="Top" HorizontalAlignment="Left">
+            <Button Click="ClickVWB" Margin="5" >Verwaltung Benutzer</Button>
+        </Border>
+        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Grid.Column="1" Grid.Row="1" Margin="5, 5, 5, 5" VerticalAlignment="Top" HorizontalAlignment="Left">
+            <Button Click="ClickVWVP" Margin="5" >Verwaltung Variable Posten</Button>
+        </Border>
+        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Grid.Column="1" Grid.Row="2" Margin="5, 5, 5, 5" VerticalAlignment="Top" HorizontalAlignment="Left">
+            <Button Click="ClickVWSP" Margin="5" >Verwaltung Statische Posten</Button>
+        </Border>
+        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Grid.Column="1" Grid.Row="3" Margin="5, 5, 5, 5" VerticalAlignment="Top" HorizontalAlignment="Left">
+            <Button Click="ClickVWJ" Margin="5" >Verwaltung Jubiläen</Button>
+        </Border>
     </Grid>
 </Window>
