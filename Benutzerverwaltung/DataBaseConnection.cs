@@ -59,7 +59,8 @@ namespace Benutzerverwaltung
 
                     @"CREATE TABLE IF NOT EXISTS VariableRechnungsPosten(
                                     VRPID int AUTO_INCREMENT PRIMARY KEY NOT NULL,
-                                    Beschreibung varchar(255) NOT NULL);",
+                                    Beschreibung varchar(255) NOT NULL,
+                                    Einheit varchar(255) NOT NULL);",
 
                     @"CREATE TABLE IF NOT EXISTS BenutzerStatisch(
                                     BSID int AUTO_INCREMENT PRIMARY KEY NOT NULL,

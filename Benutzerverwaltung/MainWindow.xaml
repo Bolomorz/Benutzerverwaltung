@@ -22,19 +22,19 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Grid.Column="1" Grid.Row="0" Margin="5, 5, 5, 5" VerticalAlignment="Top" HorizontalAlignment="Left">
+        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Grid.Column="1" Grid.Row="0" Margin="5, 5, 5, 5" VerticalAlignment="Center" HorizontalAlignment="Left">
             <Button Click="ClickVWB" Margin="5" >Verwaltung Benutzer</Button>
         </Border>
-        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Grid.Column="1" Grid.Row="1" Margin="5, 5, 5, 5" VerticalAlignment="Top" HorizontalAlignment="Left">
+        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Grid.Column="1" Grid.Row="1" Margin="5, 5, 5, 5" VerticalAlignment="Center" HorizontalAlignment="Left">
             <Button Click="ClickVWVP" Margin="5" >Verwaltung Variable Posten</Button>
         </Border>
-        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Grid.Column="1" Grid.Row="2" Margin="5, 5, 5, 5" VerticalAlignment="Top" HorizontalAlignment="Left">
+        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Grid.Column="1" Grid.Row="2" Margin="5, 5, 5, 5" VerticalAlignment="Center" HorizontalAlignment="Left">
             <Button Click="ClickVWSP" Margin="5" >Verwaltung Statische Posten</Button>
         </Border>
-        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Grid.Column="1" Grid.Row="3" Margin="5, 5, 5, 5" VerticalAlignment="Top" HorizontalAlignment="Left">
+        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Grid.Column="1" Grid.Row="3" Margin="5, 5, 5, 5" VerticalAlignment="Center" HorizontalAlignment="Left">
             <Button Click="ClickVWJ" Margin="5" >Verwaltung Jubiläen</Button>
         </Border>
-        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Grid.Column="0" Grid.Row="8" Margin="5, 5, 5, 5" VerticalAlignment="Top" HorizontalAlignment="Right">
+        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Grid.Column="0" Grid.Row="8" Margin="5, 5, 5, 5" VerticalAlignment="Center" HorizontalAlignment="Right">
             <Button Click="ClickJub" Margin="5" >Aktuelle Jubiläen</Button>
         </Border>
         <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Grid.Column="0" Grid.Row="8" Margin="5, 5, 5, 5" VerticalAlignment="Center" HorizontalAlignment="Left">
@@ -52,8 +52,8 @@
         </Border>
 
         <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Grid.Column="0" Grid.Row="1" Grid.RowSpan="7" Margin="5">
-            <ScrollViewer Margin="5">
-                <Grid x:Name="DataGrid">
+            <ScrollViewer x:Name="sv" Margin="5">
+                <Grid x:Name="DataGrid" Margin="5">
 
                 </Grid>
             </ScrollViewer>

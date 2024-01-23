@@ -26,9 +26,8 @@ namespace Benutzerverwaltung
         private List<User> users;
         private List<Static> statics;
         private List<Variable> variables;
-        private List<UserStatic> userStatics;
-        private List<UserVariable> userVariables;
         private List<int> jubilaeen;
+        private string? searchtext;
 
         private View view;
         public MainWindow()
@@ -37,12 +36,14 @@ namespace Benutzerverwaltung
             users = new List<User>();
             statics = new List<Static>();
             variables = new List<Variable>();
-            userStatics = new List<UserStatic>();
-            userVariables = new List<UserVariable>();
             jubilaeen = new List<int>();
             view = View.GesamtAktuell;
+            searchtext = null;
+            TBSearch.Text = searchtext;
+            TBView.Text = "Aktuelle Ansicht: Gesamt";
             InitializeComponent();
             LoadData();
+            LoadControls();
         }
 
         private void LoadData()
@@ -50,8 +51,6 @@ namespace Benutzerverwaltung
             users.Clear();
             statics.Clear();
             variables.Clear();
-            userStatics.Clear();
-            userVariables.Clear();
             var query = dbc.CommandQueryToList("SELECT BID, Name, Vorname, Strasse, PLZ, Ort, Geburtsdatum, Eintrittsdatum FROM Benutzer;");
             if(query.error is not null) Console.Error.WriteLine(query.error.ToString());
             else if(query.solution is not null)
@@ -80,12 +79,14 @@ namespace Benutzerverwaltung
             {
                 foreach(var v in query.solution)
                 {
-                    variables.Add(new Variable((int)v[0], (string)v[1]));
+                    Enum.TryParse(typeof(Einheit), (string)v[2], out object? result);
+                    if (result == null || typeof(Einheit) != result.GetType()) result = Einheit.euro;
+                    variables.Add(new Variable((int)v[0], (string)v[1], (Einheit)result));
                 }
             }
-            foreach(var u in users)
+            foreach(var us in users)
             {
-                foreach(var s in statics)
+                foreach(var st in statics)
                 {
                     query = dbc.CommandQueryToList(string.Format("SELECT Aktiv FROM BenutzerStatisch WHERE BID={0} AND SRPID={1};", u.Id, s.Id));
                     if(query.error is not null) Console.Error.WriteLine(query.error.ToString());
@@ -93,11 +94,11 @@ namespace Benutzerverwaltung
                     {
                         if(query.solution.Count() > 0)
                         {
-                            userStatics.Add(new UserStatic(u, s, (bool)query.solution[0][0]));
+                            us.AddStatic((st, (bool)query.solution[0][0]));
                         }
                         else
                         {
-                            userStatics.Add(new UserStatic(u, s, false));
+                            us.AddStatic((st, false));
                         }
                     }
                 }
@@ -110,11 +111,11 @@ namespace Benutzerverwaltung
                     {
                         if (query.solution.Count() > 0)
                         {
-                            userVariables.Add(new UserVariable(u, v, (decimal)query.solution[0][0]));
+                            us.AddVariable((v, (decimal)query.solution[0][0]));
                         }
                         else
                         {
-                            userVariables.Add(new UserVariable(u, v, (decimal)0.0));
+                            us.AddVariable((v, (decimal)0.0));
                         }
                     }
                 }
@@ -132,7 +133,103 @@ namespace Benutzerverwaltung
 
         private void LoadControls()
         {
+            DataGrid.ShowGridLines = true;
+            DataGrid.ColumnDefinitions.Clear();
+            DataGrid.RowDefinitions.Clear();
 
+            int cols, rows;
+            if(searchtext is null)
+            {
+                switch (view)
+                {
+                    case View.Benutzer:
+                        break;
+                    case View.StatischePosten:
+                        cols = 3;
+                        rows = statics.Count + 2;
+                        break;
+                    case View.VariablePosten: 
+                        break;
+                    case View.Jubilaeen:
+                        break;
+                    case View.JubilaeenAktuell:
+                        break;
+                    case View.GesamtAktuell:
+                        break;
+                }
+            }
+            else
+            {
+                switch (view)
+                {
+                    case View.Benutzer:
+                        break;
+                    case View.StatischePosten:
+                        break;
+                    case View.VariablePosten:
+                        break;
+                    case View.Jubilaeen:
+                        break;
+                    case View.JubilaeenAktuell:
+                        break;
+                    case View.GesamtAktuell:
+                        break;
+                }
+            }
+        }
+
+        private void WriteStatics(List<Static> s)
+        {
+
+        }
+
+        private List<Static> SortStatics(List<Static> unsorted, int left, int right) 
+        {
+            var i = left;
+            var j = right;
+            var pivot = unsorted[left];
+
+            while(i <= j)
+            {
+                while (unsorted[i].Name < pivot.Name)
+            }
+        }
+
+        private List<Static> SearchStatics(string query)
+        {
+            List<Static> search = new List<Static>();
+            foreach(var s in statics)
+            {
+                if(s.Name.Contains(query)) search.Add(s);
+            }
+            return search;
+        }
+        private List<Variable> SearchVariables(string query)
+        {
+            List<Variable> search = new List<Variable>();
+            foreach (var v in variables)
+            {
+                if (v.Name.Contains(query)) search.Add(v);
+            }
+            return search;
+        }
+        private List<User> SearchUser(string query)
+        {
+            List<User> search = new List<User>();
+            foreach (var u in users)
+            {
+                if (u.Name.Contains(query) || u.Vorname.Contains(query) || u.Ort.Contains(query) || u.Strasse.Contains(query) || u.PLZ.ToString().Contains(query)) search.Add(u);
+            }
+            return search;
+        }
+        private List<int> SearchJubs(string query)
+        {
+            List<int> search = new List<int>();
+            foreach (var s in jubilaeen)
+            {
+                if (s.ToString().Contains(query)) search.Add(s);
+            }
+            return search;
         }
 
         private void ClickVWB(object sender, RoutedEventArgs e)
@@ -140,6 +237,9 @@ namespace Benutzerverwaltung
             if (view != View.Benutzer)
             {
                 view = View.Benutzer;
+                searchtext = null;
+                TBSearch.Text = searchtext;
+                TBView.Text = "Aktuelle Ansicht: Benutzer Verwalten";
                 LoadControls();
             }
         }
@@ -148,6 +248,9 @@ namespace Benutzerverwaltung
             if (view != View.VariablePosten)
             {
                 view = View.VariablePosten;
+                searchtext = null;
+                TBSearch.Text = searchtext;
+                TBView.Text = "Aktuelle Ansicht: Variable Posten Verwalten";
                 LoadControls();
             }
         }
@@ -156,6 +259,9 @@ namespace Benutzerverwaltung
             if (view != View.StatischePosten)
             {
                 view = View.StatischePosten;
+                searchtext = null;
+                TBSearch.Text = searchtext;
+                TBView.Text = "Aktuelle Ansicht: Statische Posten Verwalten";
                 LoadControls();
             }
         }
@@ -164,6 +270,9 @@ namespace Benutzerverwaltung
             if (view != View.Jubilaeen)
             {
                 view = View.Jubilaeen;
+                searchtext = null;
+                TBSearch.Text = searchtext;
+                TBView.Text = "Aktuelle Ansicht: Jubiläen Verwalten";
                 LoadControls();
             }
         }
@@ -172,6 +281,9 @@ namespace Benutzerverwaltung
             if(view != View.JubilaeenAktuell)
             {
                 view = View.JubilaeenAktuell;
+                searchtext = null;
+                TBSearch.Text = searchtext;
+                TBView.Text = "Aktuelle Ansicht: Aktuelle Jubiläen";
                 LoadControls();
             }
         }
@@ -180,13 +292,17 @@ namespace Benutzerverwaltung
             if(view != View.GesamtAktuell)
             {
                 view = View.GesamtAktuell;
+                searchtext = null;
+                TBSearch.Text = searchtext;
+                TBView.Text = "Aktuelle Ansicht: Gesamt";
                 LoadControls();
             }
         }
 
         private void SearchTextChanged(object sender, KeyEventArgs e)
         {
-
+            searchtext = TBSearch.Text;
+            LoadControls();
         }
     }
 }
