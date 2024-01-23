@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -21,6 +22,7 @@ namespace Benutzerverwaltung
     public partial class MainWindow : Window
     {
         public enum View { Benutzer, VariablePosten, StatischePosten, Jubilaeen, GesamtAktuell, JubilaeenAktuell}
+        public enum Mode { Delete, Administrate, CreateNew}
 
         private DataBaseConnection dbc;
         private List<User> users;
@@ -32,6 +34,7 @@ namespace Benutzerverwaltung
         private View view;
         public MainWindow()
         {
+            InitializeComponent();
             dbc = new DataBaseConnection();
             users = new List<User>();
             statics = new List<Static>();
@@ -39,9 +42,8 @@ namespace Benutzerverwaltung
             jubilaeen = new List<int>();
             view = View.GesamtAktuell;
             searchtext = null;
-            TBSearch.Text = searchtext;
+            TBSearch.Text = string.Empty;
             TBView.Text = "Aktuelle Ansicht: Gesamt";
-            InitializeComponent();
             LoadData();
             LoadControls();
         }
@@ -88,7 +90,7 @@ namespace Benutzerverwaltung
             {
                 foreach(var st in statics)
                 {
-                    query = dbc.CommandQueryToList(string.Format("SELECT Aktiv FROM BenutzerStatisch WHERE BID={0} AND SRPID={1};", u.Id, s.Id));
+                    query = dbc.CommandQueryToList(string.Format("SELECT Aktiv FROM BenutzerStatisch WHERE BID={0} AND SRPID={1};", us.Id, st.Id));
                     if(query.error is not null) Console.Error.WriteLine(query.error.ToString());
                     else if(query.solution is not null)
                     {
@@ -105,7 +107,7 @@ namespace Benutzerverwaltung
 
                 foreach (var v in variables)
                 {
-                    query = dbc.CommandQueryToList(string.Format("SELECT Wert FROM BenutzerVariable WHERE BID={0} AND VRPID={1};", u.Id, v.Id));
+                    query = dbc.CommandQueryToList(string.Format("SELECT Wert FROM BenutzerVariable WHERE BID={0} AND VRPID={1};", us.Id, v.Id));
                     if (query.error is not null) Console.Error.WriteLine(query.error.ToString());
                     else if (query.solution is not null)
                     {
@@ -136,6 +138,7 @@ namespace Benutzerverwaltung
             DataGrid.ShowGridLines = true;
             DataGrid.ColumnDefinitions.Clear();
             DataGrid.RowDefinitions.Clear();
+            DataGrid.Children.Clear();
 
             int cols, rows;
             if(searchtext is null)
@@ -143,10 +146,14 @@ namespace Benutzerverwaltung
                 switch (view)
                 {
                     case View.Benutzer:
+                        rows = users.Count + 2;
+                        var sortedU = SortUsers(users);
+                        WriteUsers(sortedU, rows);
                         break;
                     case View.StatischePosten:
-                        cols = 3;
                         rows = statics.Count + 2;
+                        var sortedS = SortStatics(statics);
+                        WriteStatics(sortedS, rows);
                         break;
                     case View.VariablePosten: 
                         break;
@@ -163,8 +170,16 @@ namespace Benutzerverwaltung
                 switch (view)
                 {
                     case View.Benutzer:
+                        var queryU = SearchUser(searchtext);
+                        rows = queryU.Count + 2;
+                        var sortedU = SortUsers(queryU);
+                        WriteUsers(sortedU, rows);
                         break;
                     case View.StatischePosten:
+                        var queryS = SearchStatics(searchtext);
+                        rows = queryS.Count + 2;
+                        var sortedS = SortStatics(queryS);
+                        WriteStatics(sortedS, rows);
                         break;
                     case View.VariablePosten:
                         break;
@@ -178,21 +193,114 @@ namespace Benutzerverwaltung
             }
         }
 
-        private void WriteStatics(List<Static> s)
+        private void WriteStatics(List<Static> s, int rows)
         {
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(3, GridUnitType.Star) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+
+            for(int i = 0; i < rows; i++) DataGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });
+
+            CreateTextBlock("Nummer", 0, 0);
+            CreateTextBlock("Name", 1, 0);
+            CreateTextBlock("Wert", 2, 0);
+            CreateTextBlock("Löschen", 3, 0);
+            CreateTextBlock("Ändern", 4, 0);
+            int row = 1;
+            foreach(var st in s)
+            {
+                CreateTextBlock(row.ToString(), 0, row);
+                CreateTextBlock(st.Name, 1, row);
+                CreateTextBlock(st.Wert.ToString(), 2, row);
+                CreateButton("X", 3, row, st.Id, View.StatischePosten, Mode.Delete);
+                CreateButton("...", 4, row, st.Id, View.StatischePosten, Mode.Administrate);
+                row++;
+            }
+            CreateButton("Neuer Eintrag", 1, row, 0, View.StatischePosten, Mode.CreateNew);
+        }
+        private void WriteUsers(List<User> u, int rows)
+        {
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });
+
+            for (int i = 0; i < rows; i++) DataGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });
+
 
         }
 
-        private List<Static> SortStatics(List<Static> unsorted, int left, int right) 
+        private void CreateTextBlock(string text, int column, int row)
         {
-            var i = left;
-            var j = right;
-            var pivot = unsorted[left];
-
-            while(i <= j)
+            TextBlock tb = new TextBlock()
             {
-                while (unsorted[i].Name < pivot.Name)
-            }
+                Margin = new Thickness(5),
+                Text = text
+            };
+            Border bd = new Border()
+            {
+                BorderThickness = new Thickness(1),
+                BorderBrush = Brushes.Black,
+                Background = Brushes.Gainsboro,
+                Margin = new Thickness(5),
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Child = tb
+            };
+            Grid.SetColumn(bd, column);
+            Grid.SetRow(bd, row);
+            DataGrid.Children.Add(bd);
+        }
+        private void CreateButton(string text, int column, int row, int id, View view, Mode mode)
+        {
+            Button bt = new Button()
+            {
+                Margin = new Thickness(5),
+                Content = text,
+                Tag = (id, view, mode),
+                Foreground = (mode == Mode.Delete) ? Brushes.Red : Brushes.Black
+            };
+            bt.Click += ClickButton;
+            Border bd = new Border()
+            {
+                BorderThickness = new Thickness(1),
+                BorderBrush = Brushes.Black,
+                Background = Brushes.Gainsboro,
+                Margin = new Thickness(5),
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Child = bt
+            };
+            Grid.SetColumn(bd, column);
+            Grid.SetRow(bd, row);
+            DataGrid.Children.Add(bd);
+        }
+
+        private List<Static> SortStatics(List<Static> unsorted) 
+        {
+            List<Static> sorted = unsorted.OrderBy(s => s.Name).ToList();
+            return sorted;
+        }
+        private List<Variable> SortVariables(List<Variable> unsorted)
+        {
+            List<Variable> sorted = unsorted.OrderBy(s => s.Name).ToList();
+            return sorted;
+        }
+        private List<User> SortUsers(List<User> unsorted)
+        {
+            List<User> sorted = unsorted.OrderBy(s => s.Name).ToList();
+            return sorted;
+        }
+        private List<int> SortJubs(List<int> unsorted)
+        {
+            List<int> sorted = unsorted.OrderBy(s => s).ToList();
+            return sorted;
         }
 
         private List<Static> SearchStatics(string query)
@@ -238,7 +346,7 @@ namespace Benutzerverwaltung
             {
                 view = View.Benutzer;
                 searchtext = null;
-                TBSearch.Text = searchtext;
+                TBSearch.Text = string.Empty;
                 TBView.Text = "Aktuelle Ansicht: Benutzer Verwalten";
                 LoadControls();
             }
@@ -249,7 +357,7 @@ namespace Benutzerverwaltung
             {
                 view = View.VariablePosten;
                 searchtext = null;
-                TBSearch.Text = searchtext;
+                TBSearch.Text = string.Empty;
                 TBView.Text = "Aktuelle Ansicht: Variable Posten Verwalten";
                 LoadControls();
             }
@@ -260,7 +368,7 @@ namespace Benutzerverwaltung
             {
                 view = View.StatischePosten;
                 searchtext = null;
-                TBSearch.Text = searchtext;
+                TBSearch.Text = string.Empty;
                 TBView.Text = "Aktuelle Ansicht: Statische Posten Verwalten";
                 LoadControls();
             }
@@ -271,7 +379,7 @@ namespace Benutzerverwaltung
             {
                 view = View.Jubilaeen;
                 searchtext = null;
-                TBSearch.Text = searchtext;
+                TBSearch.Text = string.Empty;
                 TBView.Text = "Aktuelle Ansicht: Jubiläen Verwalten";
                 LoadControls();
             }
@@ -282,7 +390,7 @@ namespace Benutzerverwaltung
             {
                 view = View.JubilaeenAktuell;
                 searchtext = null;
-                TBSearch.Text = searchtext;
+                TBSearch.Text = string.Empty;
                 TBView.Text = "Aktuelle Ansicht: Aktuelle Jubiläen";
                 LoadControls();
             }
@@ -293,9 +401,24 @@ namespace Benutzerverwaltung
             {
                 view = View.GesamtAktuell;
                 searchtext = null;
-                TBSearch.Text = searchtext;
+                TBSearch.Text = string.Empty;
                 TBView.Text = "Aktuelle Ansicht: Gesamt";
                 LoadControls();
+            }
+        }
+
+        private void ClickButton(object sender, RoutedEventArgs e)
+        {
+            Button bt = (Button)sender;
+            var btinfo = ((int id, View view, Mode mode))bt.Tag;
+            switch (btinfo.mode)
+            {
+                case Mode.Delete:
+                    break;
+                case Mode.Administrate:
+                    break;
+                case Mode.CreateNew:
+                    break;
             }
         }
 
