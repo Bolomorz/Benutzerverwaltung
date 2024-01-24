@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace Benutzerverwaltung
 {
@@ -108,13 +109,23 @@ namespace Benutzerverwaltung
         public int Id;
         public string Name;
         public Einheit Einheit;
-        public decimal? Wert;
+        public string Formel;
 
-        public Variable(int id, string name, Einheit einheit)
+        public Variable(int id, string name, Einheit einheit, string Formel)
         {
             this.Id = id;
             this.Name = name;
             this.Einheit = einheit;
+            this.Formel = Formel;
+        }
+
+        public decimal CalcValue(decimal input)
+        {
+            switch (Einheit)
+            {
+                case Einheit.euro: return input;
+                case Einheit.quadratmeter: return 
+            }
         }
 
         public override int GetHashCode()
@@ -134,6 +145,38 @@ namespace Benutzerverwaltung
             if (A.Id == B.Id) return true; else return false;
         }
         public static bool operator !=(Variable A, Variable B)
+        {
+            if (A.Id != B.Id) return true; else return false;
+        }
+    }
+
+    public class Jubilaeum
+    {
+        public int Id;
+        public int Jahre;
+
+        public Jubilaeum(int id, int jahre)
+        {
+            this.Id = id;
+            this.Jahre = jahre;
+        }
+
+        public override int GetHashCode()
+        {
+            int hash = Id + 17 * Jahre;
+            return hash;
+        }
+        public override bool Equals(object? obj)
+        {
+            if (obj == null || typeof(Jubilaeum) != obj.GetType()) return false;
+            Jubilaeum v = (Jubilaeum)obj;
+            if (Id != v.Id) return false; else return true;
+        }
+        public static bool operator ==(Jubilaeum A, Jubilaeum B)
+        {
+            if (A.Id == B.Id) return true; else return false;
+        }
+        public static bool operator !=(Jubilaeum A, Jubilaeum B)
         {
             if (A.Id != B.Id) return true; else return false;
         }

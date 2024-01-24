@@ -28,7 +28,7 @@ namespace Benutzerverwaltung
         private List<User> users;
         private List<Static> statics;
         private List<Variable> variables;
-        private List<int> jubilaeen;
+        private List<Jubilaeum> jubilaeen;
         private string? searchtext;
 
         private View view;
@@ -39,7 +39,7 @@ namespace Benutzerverwaltung
             users = new List<User>();
             statics = new List<Static>();
             variables = new List<Variable>();
-            jubilaeen = new List<int>();
+            jubilaeen = new List<Jubilaeum>();
             view = View.GesamtAktuell;
             searchtext = null;
             TBSearch.Text = string.Empty;
@@ -83,7 +83,7 @@ namespace Benutzerverwaltung
                 {
                     Enum.TryParse(typeof(Einheit), (string)v[2], out object? result);
                     if (result == null || typeof(Einheit) != result.GetType()) result = Einheit.euro;
-                    variables.Add(new Variable((int)v[0], (string)v[1], (Einheit)result));
+                    variables.Add(new Variable((int)v[0], (string)v[1], (Einheit)result, (string)v[3]));
                 }
             }
             foreach(var us in users)
@@ -122,13 +122,13 @@ namespace Benutzerverwaltung
                     }
                 }
             }
-            query = dbc.CommandQueryToList("SELECT Jahre FROM Jubilaeum;");
+            query = dbc.CommandQueryToList("SELECT * FROM Jubilaeum;");
             if (query.error is not null) Console.Error.WriteLine(query.error.ToString());
             else if(query.solution is not null)
             {
                 foreach(var j in query.solution)
                 {
-                    jubilaeen.Add((int)j[0]);
+                    jubilaeen.Add(new Jubilaeum((int)j[0], (int)j[1]));
                 }
             }
         }
@@ -156,8 +156,14 @@ namespace Benutzerverwaltung
                         WriteStatics(sortedS, rows);
                         break;
                     case View.VariablePosten: 
+                        rows = variables.Count + 2;
+                        var sortedV = SortVariables(variables);
+                        WriteVariables(sortedV, rows);
                         break;
                     case View.Jubilaeen:
+                        rows = jubilaeen.Count + 2;
+                        var sortedJ = SortJubs(jubilaeen);
+                        WriteJubs(sortedJ, rows);
                         break;
                     case View.JubilaeenAktuell:
                         break;
@@ -182,8 +188,16 @@ namespace Benutzerverwaltung
                         WriteStatics(sortedS, rows);
                         break;
                     case View.VariablePosten:
+                        var queryV = SearchVariables(searchtext);
+                        rows = queryV.Count + 2;
+                        var sortedV = SortVariables(queryV);
+                        WriteVariables(sortedV, rows);
                         break;
                     case View.Jubilaeen:
+                        var queryJ = SearchJubs(searchtext);
+                        rows = queryJ.Count + 2;
+                        var sortedJ = SortJubs(queryJ);
+                        WriteJubs(sortedJ, rows);
                         break;
                     case View.JubilaeenAktuell:
                         break;
@@ -218,7 +232,7 @@ namespace Benutzerverwaltung
                 CreateButton("...", 4, row, st.Id, View.StatischePosten, Mode.Administrate);
                 row++;
             }
-            CreateButton("Neuer Eintrag", 1, row, 0, View.StatischePosten, Mode.CreateNew);
+            CreateButton("Neuer Posten", 1, row, 0, View.StatischePosten, Mode.CreateNew);
         }
         private void WriteUsers(List<User> u, int rows)
         {
@@ -230,10 +244,79 @@ namespace Benutzerverwaltung
             DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });
             DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });
             DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
 
             for (int i = 0; i < rows; i++) DataGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });
 
+            CreateTextBlock("Nummer", 0, 0); CreateTextBlock("Name", 1, 0); CreateTextBlock("Vorname", 2, 0); CreateTextBlock("Strasse", 3, 0);
+            CreateTextBlock("PLZ", 4, 0); CreateTextBlock("Ort", 5, 0); CreateTextBlock("Geburtsdatum", 6, 0); CreateTextBlock("Eintrittsdatum", 7, 0);
+            CreateTextBlock("Löschen", 8, 0); CreateTextBlock("Ändern", 9, 0);
+            int row = 1;
+            foreach(var user in u)
+            {
+                CreateTextBlock(row.ToString(), 0, row);
+                CreateTextBlock(user.Name, 1, row); CreateTextBlock(user.Vorname, 2, row); CreateTextBlock(user.Strasse, 3, row); CreateTextBlock(user.PLZ.ToString(), 4, row);
+                CreateTextBlock(user.Ort, 5, row); CreateTextBlock(user.Geburtstag.Date.ToString(), 6, row); CreateTextBlock(user.Eintrittsdatum.Date.ToString(), 7, row);
+                CreateButton("X", 8, row, user.Id, View.Benutzer, Mode.Delete);
+                CreateButton("...", 9, row, user.Id, View.Benutzer, Mode.Administrate);
+                row++;
+            }
+            CreateButton("Neuer Benutzer", 1, row, 0, View.Benutzer, Mode.CreateNew);
+        }
+        private void WriteVariables(List<Variable> v, int rows)
+        {
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(3, GridUnitType.Star) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
 
+            for (int i = 0; i < rows; i++) DataGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });
+
+            CreateTextBlock("Nummer", 0, 0);
+            CreateTextBlock("Name", 1, 0);
+            CreateTextBlock("Einheit", 2, 0);
+            CreateTextBlock("Formel", 3, 0);
+            CreateTextBlock("Löschen", 4, 0);
+            CreateTextBlock("Ändern", 5, 0);
+            int row = 1;
+            foreach(var variable in v)
+            {
+                CreateTextBlock(row.ToString(), 0, row);
+                CreateTextBlock(variable.Name, 1, row);
+                CreateTextBlock(variable.Einheit.ToString(), 2, row);
+                CreateTextBlock(variable.Formel, 3, row);
+                CreateButton("X", 4, row, variable.Id, View.StatischePosten, Mode.Delete);
+                CreateButton("...", 5, row, variable.Id, View.StatischePosten, Mode.Administrate);
+                row++;
+            }
+            CreateButton("Neuer Posten", 1, row, 0, View.StatischePosten, Mode.CreateNew);
+        }
+        private void WriteJubs(List<Jubilaeum> j, int rows)
+        {
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(3, GridUnitType.Star) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+
+            for (int i = 0; i < rows; i++) DataGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });
+
+            CreateTextBlock("Nummer", 0, 0);
+            CreateTextBlock("Jahre", 1, 0);
+            CreateTextBlock("Löschen", 2, 0);
+            CreateTextBlock("Ändern", 3, 0);
+            int row = 1;
+            foreach(var jub in j)
+            {
+                CreateTextBlock(row.ToString(), 0, row);
+                CreateTextBlock(jub.Jahre.ToString(), 1, row);
+                CreateButton("X", 2, row, jub.Id, View.StatischePosten, Mode.Delete);
+                CreateButton("...", 3, row, jub.Id, View.StatischePosten, Mode.Administrate);
+                row++;
+            }
+            CreateButton("Neues Jubiläum", 1, row, 0, View.StatischePosten, Mode.CreateNew);
         }
 
         private void CreateTextBlock(string text, int column, int row)
@@ -259,11 +342,12 @@ namespace Benutzerverwaltung
         }
         private void CreateButton(string text, int column, int row, int id, View view, Mode mode)
         {
+            (int id, View view, Mode mode) vt = new(id, view, mode);
             Button bt = new Button()
             {
                 Margin = new Thickness(5),
                 Content = text,
-                Tag = (id, view, mode),
+                Tag = vt,
                 Foreground = (mode == Mode.Delete) ? Brushes.Red : Brushes.Black
             };
             bt.Click += ClickButton;
@@ -297,9 +381,9 @@ namespace Benutzerverwaltung
             List<User> sorted = unsorted.OrderBy(s => s.Name).ToList();
             return sorted;
         }
-        private List<int> SortJubs(List<int> unsorted)
+        private List<Jubilaeum> SortJubs(List<Jubilaeum> unsorted)
         {
-            List<int> sorted = unsorted.OrderBy(s => s).ToList();
+            List<Jubilaeum> sorted = unsorted.OrderBy(s => s.Jahre).ToList();
             return sorted;
         }
 
@@ -330,12 +414,12 @@ namespace Benutzerverwaltung
             }
             return search;
         }
-        private List<int> SearchJubs(string query)
+        private List<Jubilaeum> SearchJubs(string query)
         {
-            List<int> search = new List<int>();
+            List<Jubilaeum> search = new List<Jubilaeum>();
             foreach (var s in jubilaeen)
             {
-                if (s.ToString().Contains(query)) search.Add(s);
+                if (s.Jahre.ToString().Contains(query)) search.Add(s);
             }
             return search;
         }
