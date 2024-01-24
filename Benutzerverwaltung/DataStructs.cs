@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using System.Data;
 
 namespace Benutzerverwaltung
 {
@@ -18,8 +20,8 @@ namespace Benutzerverwaltung
         public string Ort;
         public DateTime Geburtstag;
         public DateTime Eintrittsdatum;
-        List<(Static s, bool b)> statics;
-        List<(Variable v, decimal w)> variables;
+        public List<(Static s, bool b)> statics;
+        public List<(Variable v, decimal w)> variables;
 
         public User(int id, string name, string vorname, string strasse, int plz, string ort, DateTime geburtstag, DateTime eintrittsdatum) 
         {
@@ -108,24 +110,36 @@ namespace Benutzerverwaltung
     {
         public int Id;
         public string Name;
-        public Einheit Einheit;
         public string Formel;
 
-        public Variable(int id, string name, Einheit einheit, string Formel)
+        public Variable(int id, string name, string Formel)
         {
             this.Id = id;
             this.Name = name;
-            this.Einheit = einheit;
             this.Formel = Formel;
         }
 
         public decimal CalcValue(decimal input)
         {
-            switch (Einheit)
+            if (Formel != "I" && Formel != string.Empty)
             {
-                case Einheit.euro: return input;
-                case Einheit.quadratmeter: return 
+                string? result = new DataTable().Compute(string.Format(Replace(Formel), input), "").ToString();
+                if (result is not null) return Decimal.Parse(result); else return input;
             }
+            else
+            {
+                return input;
+            }
+        }
+
+        private string Replace(string input)
+        {
+            string output = string.Empty;
+            foreach(var c in input)
+            {
+                if (c == 'I') output += "{0}"; else if(c != ' ') output += c;
+            }
+            return output;
         }
 
         public override int GetHashCode()

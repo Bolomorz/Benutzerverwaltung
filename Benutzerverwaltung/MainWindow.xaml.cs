@@ -23,6 +23,7 @@ namespace Benutzerverwaltung
     {
         public enum View { Benutzer, VariablePosten, StatischePosten, Jubilaeen, GesamtAktuell, JubilaeenAktuell}
         public enum Mode { Delete, Administrate, CreateNew}
+        public enum JubilaeumMode { Birthday, Join}
 
         private DataBaseConnection dbc;
         private List<User> users;
@@ -32,6 +33,7 @@ namespace Benutzerverwaltung
         private string? searchtext;
 
         private View view;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -48,11 +50,18 @@ namespace Benutzerverwaltung
             LoadControls();
         }
 
+        public void Reload()
+        {
+            LoadData();
+            LoadControls();
+        }
+
         private void LoadData()
         {
             users.Clear();
             statics.Clear();
             variables.Clear();
+            jubilaeen.Clear();
             var query = dbc.CommandQueryToList("SELECT BID, Name, Vorname, Strasse, PLZ, Ort, Geburtsdatum, Eintrittsdatum FROM Benutzer;");
             if(query.error is not null) Console.Error.WriteLine(query.error.ToString());
             else if(query.solution is not null)
@@ -81,9 +90,7 @@ namespace Benutzerverwaltung
             {
                 foreach(var v in query.solution)
                 {
-                    Enum.TryParse(typeof(Einheit), (string)v[2], out object? result);
-                    if (result == null || typeof(Einheit) != result.GetType()) result = Einheit.euro;
-                    variables.Add(new Variable((int)v[0], (string)v[1], (Einheit)result, (string)v[3]));
+                    variables.Add(new Variable((int)v[0], (string)v[1], (string)v[2]));
                 }
             }
             foreach(var us in users)
@@ -94,7 +101,7 @@ namespace Benutzerverwaltung
                     if(query.error is not null) Console.Error.WriteLine(query.error.ToString());
                     else if(query.solution is not null)
                     {
-                        if(query.solution.Count() > 0)
+                        if(query.solution.Count() > 0 && query.solution[0].Count > 0)
                         {
                             us.AddStatic((st, (bool)query.solution[0][0]));
                         }
@@ -111,7 +118,7 @@ namespace Benutzerverwaltung
                     if (query.error is not null) Console.Error.WriteLine(query.error.ToString());
                     else if (query.solution is not null)
                     {
-                        if (query.solution.Count() > 0)
+                        if (query.solution.Count() > 0 && query.solution[0].Count > 0)
                         {
                             us.AddVariable((v, (decimal)query.solution[0][0]));
                         }
@@ -166,8 +173,15 @@ namespace Benutzerverwaltung
                         WriteJubs(sortedJ, rows);
                         break;
                     case View.JubilaeenAktuell:
+                        var sortedUJA = SortUsers(users);
+                        var sortedJJA = SortJubs(jubilaeen);
+                        var currentJ = CalculateJubs(sortedUJA, sortedJJA);
+                        rows = currentJ.Count + 1;
+                        WriteCurrentJubs(currentJ, rows);
                         break;
                     case View.GesamtAktuell:
+                        var sortedUGA = SortUsers(users);
+                        WriteCurrentUsers(sortedUGA, statics, variables);
                         break;
                 }
             }
@@ -200,8 +214,17 @@ namespace Benutzerverwaltung
                         WriteJubs(sortedJ, rows);
                         break;
                     case View.JubilaeenAktuell:
+                        var queryUJA = SearchUser(searchtext);
+                        var sortedUJA = SortUsers(queryUJA);
+                        var sortedJJA = SortJubs(jubilaeen);
+                        var currentJ = CalculateJubs(sortedUJA, sortedJJA);
+                        rows = currentJ.Count + 1;
+                        WriteCurrentJubs(currentJ, rows);
                         break;
                     case View.GesamtAktuell:
+                        var queryUGA = SearchUser(searchtext);
+                        var sortedUGA = SortUsers(queryUGA);
+                        WriteCurrentUsers(sortedUGA, statics, variables);
                         break;
                 }
             }
@@ -269,7 +292,6 @@ namespace Benutzerverwaltung
             DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
             DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(3, GridUnitType.Star) });
             DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });
             DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
             DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
 
@@ -277,22 +299,20 @@ namespace Benutzerverwaltung
 
             CreateTextBlock("Nummer", 0, 0);
             CreateTextBlock("Name", 1, 0);
-            CreateTextBlock("Einheit", 2, 0);
-            CreateTextBlock("Formel", 3, 0);
-            CreateTextBlock("Löschen", 4, 0);
-            CreateTextBlock("Ändern", 5, 0);
+            CreateTextBlock("Formel", 2, 0);
+            CreateTextBlock("Löschen", 3, 0);
+            CreateTextBlock("Ändern", 4, 0);
             int row = 1;
             foreach(var variable in v)
             {
                 CreateTextBlock(row.ToString(), 0, row);
                 CreateTextBlock(variable.Name, 1, row);
-                CreateTextBlock(variable.Einheit.ToString(), 2, row);
-                CreateTextBlock(variable.Formel, 3, row);
-                CreateButton("X", 4, row, variable.Id, View.StatischePosten, Mode.Delete);
-                CreateButton("...", 5, row, variable.Id, View.StatischePosten, Mode.Administrate);
+                CreateTextBlock(variable.Formel, 2, row);
+                CreateButton("X", 3, row, variable.Id, View.VariablePosten, Mode.Delete);
+                CreateButton("...", 4, row, variable.Id, View.VariablePosten, Mode.Administrate);
                 row++;
             }
-            CreateButton("Neuer Posten", 1, row, 0, View.StatischePosten, Mode.CreateNew);
+            CreateButton("Neuer Posten", 1, row, 0, View.VariablePosten, Mode.CreateNew);
         }
         private void WriteJubs(List<Jubilaeum> j, int rows)
         {
@@ -312,11 +332,106 @@ namespace Benutzerverwaltung
             {
                 CreateTextBlock(row.ToString(), 0, row);
                 CreateTextBlock(jub.Jahre.ToString(), 1, row);
-                CreateButton("X", 2, row, jub.Id, View.StatischePosten, Mode.Delete);
-                CreateButton("...", 3, row, jub.Id, View.StatischePosten, Mode.Administrate);
+                CreateButton("X", 2, row, jub.Id, View.Jubilaeen, Mode.Delete);
+                CreateButton("...", 3, row, jub.Id, View.Jubilaeen, Mode.Administrate);
                 row++;
             }
-            CreateButton("Neues Jubiläum", 1, row, 0, View.StatischePosten, Mode.CreateNew);
+            CreateButton("Neues Jubiläum", 1, row, 0, View.Jubilaeen, Mode.CreateNew);
+        }
+        private void WriteCurrentJubs(List<(User u, Jubilaeum j, JubilaeumMode jm)> current, int rows)
+        {
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(3, GridUnitType.Star) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(3, GridUnitType.Star) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });
+
+            for (int i = 0; i < rows; i++) DataGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });
+
+            CreateTextBlock("Nummer", 0, 0); CreateTextBlock("Name", 1, 0); CreateTextBlock("Vorname", 2, 0); CreateTextBlock("Jahre", 3, 0); CreateTextBlock("Datum", 4, 0);
+            CreateTextBlock("Art", 5, 0);
+            int row = 1;
+            foreach(var c in current)
+            {
+                CreateTextBlock(row.ToString(), 0, row); CreateTextBlock(c.u.Name, 1, row); CreateTextBlock(c.u.Vorname, 2, row); CreateTextBlock(c.j.Jahre.ToString(), 3, row);
+                if(c.jm == JubilaeumMode.Birthday)
+                {
+                    CreateTextBlock(c.u.Geburtstag.Date.ToString(), 4, row);
+                    CreateTextBlock("Geburtstag", 5, row);
+                }
+                else
+                {
+                    CreateTextBlock(c.u.Eintrittsdatum.Date.ToString(), 4, row);
+                    CreateTextBlock("Eintrittsdatum", 5, row);
+                }
+                row++;
+            }
+        }
+        private void WriteCurrentUsers(List<User> lu, List<Static> ls, List<Variable> lv)
+        {
+            int rows = lu.Count + 2;
+            int cols = 2 + ls.Count + lv.Count + 2;
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
+            for(int i = 0; i < cols; i++) DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });
+            for (int i = 0; i < rows; i++) DataGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });
+            CreateTextBlock("Nummer", 0, 0); CreateTextBlock("Name", 1, 0); CreateTextBlock("Vorname", 2, 0);
+            decimal[] sums = new decimal[cols+1];
+            int col = 3;
+            foreach (var s in ls) { CreateTextBlock(s.Name, col, 0); col++; sums[col] = 0; }
+            foreach (var v in lv) { CreateTextBlock(v.Name, col, 0); col++; sums[col] = 0; }
+            CreateTextBlock("Gesamt", col, 0); sums[col] = 0;
+            CreateTextBlock("Bearbeiten", col + 1, 0);
+            int row = 1;
+            foreach(var u in lu)
+            {
+                CreateTextBlock(row.ToString(), 0, row); CreateTextBlock(u.Name, 1, row); CreateTextBlock(u.Vorname, 2, row);
+                decimal sum = 0;
+                col = 3;
+                foreach(var s in ls)
+                {
+                    foreach(var us in u.statics)
+                    {
+                        if(s == us.s)
+                        {
+                            if (us.b)
+                            {
+                                CreateTextBlock(s.Wert.ToString(), col, row);
+                                sums[col] += s.Wert;
+                                sum += s.Wert;
+                            }
+                            else
+                            {
+                                CreateTextBlock("-", col, row);
+                            }
+                        }
+                    }
+                    col++;
+                }
+                foreach(var v in lv)
+                {
+                    foreach(var uv in u.variables)
+                    {
+                        if(v == uv.v)
+                        {
+                            var calc = uv.v.CalcValue(uv.w);
+                            CreateTextBlock(calc.ToString(), col, row);
+                            sums[col] += calc;
+                            sum += calc;
+                        }
+                    }
+                    col++;
+                }
+                CreateTextBlock(sum.ToString(), col, row);
+                CreateButton("...", col + 1, row, u.Id, View.GesamtAktuell, Mode.Administrate);
+                sums[col] += sum;
+                row++;
+            }
+            CreateTextBlock("Summe", 2, row);
+            for(col = 3; col < sums.Length; col++)
+            {
+                CreateTextBlock(sums[col].ToString(), col, row);
+            }        
         }
 
         private void CreateTextBlock(string text, int column, int row)
@@ -348,14 +463,15 @@ namespace Benutzerverwaltung
                 Margin = new Thickness(5),
                 Content = text,
                 Tag = vt,
-                Foreground = (mode == Mode.Delete) ? Brushes.Red : Brushes.Black
+                Background = (mode == Mode.Delete) ? Brushes.MistyRose : (mode == Mode.CreateNew) ? Brushes.Azure : Brushes.YellowGreen,
+                Foreground = (mode == Mode.Delete) ? Brushes.Red : (mode == Mode.CreateNew) ? Brushes.Blue : Brushes.Green
             };
             bt.Click += ClickButton;
             Border bd = new Border()
             {
                 BorderThickness = new Thickness(1),
-                BorderBrush = Brushes.Black,
-                Background = Brushes.Gainsboro,
+                BorderBrush = (mode == Mode.Delete) ? Brushes.Red : (mode == Mode.CreateNew) ? Brushes.Blue : Brushes.Green,
+                Background = (mode == Mode.Delete) ? Brushes.MistyRose : (mode == Mode.CreateNew) ? Brushes.Azure : Brushes.YellowGreen,
                 Margin = new Thickness(5),
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -422,6 +538,24 @@ namespace Benutzerverwaltung
                 if (s.Jahre.ToString().Contains(query)) search.Add(s);
             }
             return search;
+        }
+
+        private List<(User u, Jubilaeum j, JubilaeumMode jm)> CalculateJubs(List<User> lu, List<Jubilaeum> lj)
+        {
+            List<(User u, Jubilaeum j, JubilaeumMode jm)> currentJubs = new List<(User u, Jubilaeum j, JubilaeumMode jm)>();
+            DateTime today = DateTime.Now;
+            int thisyear = today.Year;
+            foreach(var user in lu)
+            {
+                foreach(var jub in lj)
+                {
+                    int birthyear = user.Geburtstag.Year;
+                    int joinyear = user.Eintrittsdatum.Year;
+                    if(thisyear - birthyear == jub.Jahre) currentJubs.Add((user, jub, JubilaeumMode.Birthday));
+                    if(thisyear - joinyear == jub.Jahre) currentJubs.Add((user, jub, JubilaeumMode.Join));
+                }
+            }
+            return currentJubs;
         }
 
         private void ClickVWB(object sender, RoutedEventArgs e)
@@ -498,12 +632,88 @@ namespace Benutzerverwaltung
             switch (btinfo.mode)
             {
                 case Mode.Delete:
+                    Delete(btinfo.id, btinfo.view);
                     break;
-                case Mode.Administrate:
-                    break;
-                case Mode.CreateNew:
+                default:
+                    Admin(btinfo.id, btinfo.view, btinfo.mode);
                     break;
             }
+        }
+
+        private void Delete(int id, View view)
+        {
+            DataBaseConnection.QueryList query = new DataBaseConnection.QueryList();
+            switch (view)
+            {
+                case View.Benutzer:
+                    query = dbc.CommandQueryToList(string.Format("SELECT * FROM Benutzer WHERE BID={0}", id));
+                    if (query.error is not null) Console.Error.WriteLine(query.error);
+                    else if (query.solution is not null && query.solution.Count > 0 && query.solution[0].Count > 0) {
+                        string text = string.Format("Möchten Sie folgenden Nutzer unwiderruflich löschen?\n{0} {1} {2} {3} {4}", query.solution[0][0], query.solution[0][1], query.solution[0][2], query.solution[0][3], query.solution[0][4]);
+                        if (MessageBoxResult.Yes == MessageBox.Show(text, "Löschen", MessageBoxButton.YesNoCancel))
+                        {
+                            var err = dbc.CommandNonQuery(string.Format("DELETE FROM Benutzer WHERE BID={0}", id));
+                            if(err is not null) Console.Error.WriteLine(err);
+                            err = dbc.CommandNonQuery(string.Format("DELETE FROM BenutzerStatisch WHERE BID={0}", id));
+                            if (err is not null) Console.Error.WriteLine(err);
+                            err = dbc.CommandNonQuery(string.Format("DELETE FROM BenutzerVariable WHERE BID={0}", id));
+                            if (err is not null) Console.Error.WriteLine(err);
+                            Reload();
+                        }
+                    }
+                    break;
+                case View.StatischePosten:
+                    query = dbc.CommandQueryToList(string.Format("SELECT * FROM StatischeRechnungsPosten WHERE SRPID={0}", id));
+                    if (query.error is not null) Console.Error.WriteLine(query.error);
+                    else if (query.solution is not null && query.solution.Count > 0 && query.solution[0].Count > 0)
+                    {
+                        string text = string.Format("Möchten Sie folgenden Statischen Rechnungsposten unwiderruflich löschen?\n{0} {1} {2}", query.solution[0][0], query.solution[0][1], query.solution[0][2]);
+                        if (MessageBoxResult.Yes == MessageBox.Show(text, "Löschen", MessageBoxButton.YesNoCancel))
+                        {
+                            var err = dbc.CommandNonQuery(string.Format("DELETE FROM StatischeRechnungsPosten WHERE SRPID={0}", id));
+                            if (err is not null) Console.Error.WriteLine(err);
+                            err = dbc.CommandNonQuery(string.Format("DELETE FROM BenutzerStatisch WHERE SRPID={0}", id));
+                            if (err is not null) Console.Error.WriteLine(err);
+                            Reload();
+                        }
+                    }
+                    break;
+                case View.VariablePosten:
+                    query = dbc.CommandQueryToList(string.Format("SELECT * FROM VariableRechnungsPosten WHERE VRPID={0}", id));
+                    if (query.error is not null) Console.Error.WriteLine(query.error);
+                    else if (query.solution is not null && query.solution.Count > 0 && query.solution[0].Count > 0)
+                    {
+                        string text = string.Format("Möchten Sie folgenden Variablen Rechnungsposten unwiderruflich löschen?\n{0} {1} {2}", query.solution[0][0], query.solution[0][1], query.solution[0][2]);
+                        if (MessageBoxResult.Yes == MessageBox.Show(text, "Löschen", MessageBoxButton.YesNoCancel))
+                        {
+                            var err = dbc.CommandNonQuery(string.Format("DELETE FROM VariableRechnungsPosten WHERE VRPID={0}", id));
+                            if (err is not null) Console.Error.WriteLine(err);
+                            err = dbc.CommandNonQuery(string.Format("DELETE FROM BenutzerVariable WHERE VRPID={0}", id));
+                            if (err is not null) Console.Error.WriteLine(err);
+                            Reload();
+                        }
+                    }
+                    break;
+                case View.Jubilaeen:
+                    query = dbc.CommandQueryToList(string.Format("SELECT * FROM Jubilaeum WHERE JID={0}", id));
+                    if (query.error is not null) Console.Error.WriteLine(query.error);
+                    else if (query.solution is not null && query.solution.Count > 0 && query.solution[0].Count > 0)
+                    {
+                        string text = string.Format("Möchten Sie folgenden Variablen Rechnungsposten unwiderruflich löschen?\n{0} {1}", query.solution[0][0], query.solution[0][1]);
+                        if (MessageBoxResult.Yes == MessageBox.Show(text, "Löschen", MessageBoxButton.YesNoCancel))
+                        {
+                            var err = dbc.CommandNonQuery(string.Format("DELETE FROM Jubilaeum WHERE JID={0}", id));
+                            if (err is not null) Console.Error.WriteLine(err);
+                            Reload();
+                        }
+                    }
+                    break;
+            }
+        }
+
+        private void Admin(int id, View view, Mode mode)
+        {
+
         }
 
         private void SearchTextChanged(object sender, KeyEventArgs e)
