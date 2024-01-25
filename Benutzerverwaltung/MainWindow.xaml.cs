@@ -34,6 +34,13 @@ namespace Benutzerverwaltung
 
         private View view;
 
+        public static Brush CreateForeground = Brushes.Blue;
+        public static Brush CreateBackground = Brushes.Azure;
+        public static Brush DeleteForeground = Brushes.Red;
+        public static Brush DeleteBackground = Brushes.MistyRose;
+        public static Brush AdminForeground = Brushes.Green;
+        public static Brush AdminBackground = Brushes.YellowGreen;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -147,7 +154,7 @@ namespace Benutzerverwaltung
             DataGrid.RowDefinitions.Clear();
             DataGrid.Children.Clear();
 
-            int cols, rows;
+            int rows;
             if(searchtext is null)
             {
                 switch (view)
@@ -251,11 +258,11 @@ namespace Benutzerverwaltung
                 CreateTextBlock(row.ToString(), 0, row);
                 CreateTextBlock(st.Name, 1, row);
                 CreateTextBlock(st.Wert.ToString(), 2, row);
-                CreateButton("X", 3, row, st.Id, View.StatischePosten, Mode.Delete);
-                CreateButton("...", 4, row, st.Id, View.StatischePosten, Mode.Administrate);
+                CreateButton("X", 3, row, st.Id, View.StatischePosten, Mode.Delete, null);
+                CreateButton("...", 4, row, st.Id, View.StatischePosten, Mode.Administrate, null);
                 row++;
             }
-            CreateButton("Neuer Posten", 1, row, 0, View.StatischePosten, Mode.CreateNew);
+            CreateButton("Neuer Posten", 1, row, 0, View.StatischePosten, Mode.CreateNew, null);
         }
         private void WriteUsers(List<User> u, int rows)
         {
@@ -281,11 +288,11 @@ namespace Benutzerverwaltung
                 CreateTextBlock(row.ToString(), 0, row);
                 CreateTextBlock(user.Name, 1, row); CreateTextBlock(user.Vorname, 2, row); CreateTextBlock(user.Strasse, 3, row); CreateTextBlock(user.PLZ.ToString(), 4, row);
                 CreateTextBlock(user.Ort, 5, row); CreateTextBlock(user.Geburtstag.Date.ToString(), 6, row); CreateTextBlock(user.Eintrittsdatum.Date.ToString(), 7, row);
-                CreateButton("X", 8, row, user.Id, View.Benutzer, Mode.Delete);
-                CreateButton("...", 9, row, user.Id, View.Benutzer, Mode.Administrate);
+                CreateButton("X", 8, row, user.Id, View.Benutzer, Mode.Delete, user);
+                CreateButton("...", 9, row, user.Id, View.Benutzer, Mode.Administrate, user);
                 row++;
             }
-            CreateButton("Neuer Benutzer", 1, row, 0, View.Benutzer, Mode.CreateNew);
+            CreateButton("Neuer Benutzer", 1, row, 0, View.Benutzer, Mode.CreateNew, null);
         }
         private void WriteVariables(List<Variable> v, int rows)
         {
@@ -308,11 +315,11 @@ namespace Benutzerverwaltung
                 CreateTextBlock(row.ToString(), 0, row);
                 CreateTextBlock(variable.Name, 1, row);
                 CreateTextBlock(variable.Formel, 2, row);
-                CreateButton("X", 3, row, variable.Id, View.VariablePosten, Mode.Delete);
-                CreateButton("...", 4, row, variable.Id, View.VariablePosten, Mode.Administrate);
+                CreateButton("X", 3, row, variable.Id, View.VariablePosten, Mode.Delete, null);
+                CreateButton("...", 4, row, variable.Id, View.VariablePosten, Mode.Administrate, null);
                 row++;
             }
-            CreateButton("Neuer Posten", 1, row, 0, View.VariablePosten, Mode.CreateNew);
+            CreateButton("Neuer Posten", 1, row, 0, View.VariablePosten, Mode.CreateNew, null);
         }
         private void WriteJubs(List<Jubilaeum> j, int rows)
         {
@@ -332,11 +339,11 @@ namespace Benutzerverwaltung
             {
                 CreateTextBlock(row.ToString(), 0, row);
                 CreateTextBlock(jub.Jahre.ToString(), 1, row);
-                CreateButton("X", 2, row, jub.Id, View.Jubilaeen, Mode.Delete);
-                CreateButton("...", 3, row, jub.Id, View.Jubilaeen, Mode.Administrate);
+                CreateButton("X", 2, row, jub.Id, View.Jubilaeen, Mode.Delete, null);
+                CreateButton("...", 3, row, jub.Id, View.Jubilaeen, Mode.Administrate, null);
                 row++;
             }
-            CreateButton("Neues Jubiläum", 1, row, 0, View.Jubilaeen, Mode.CreateNew);
+            CreateButton("Neues Jubiläum", 1, row, 0, View.Jubilaeen, Mode.CreateNew, null);
         }
         private void WriteCurrentJubs(List<(User u, Jubilaeum j, JubilaeumMode jm)> current, int rows)
         {
@@ -423,7 +430,7 @@ namespace Benutzerverwaltung
                     col++;
                 }
                 CreateTextBlock(sum.ToString(), col, row);
-                CreateButton("...", col + 1, row, u.Id, View.GesamtAktuell, Mode.Administrate);
+                CreateButton("...", col + 1, row, u.Id, View.GesamtAktuell, Mode.Administrate, u);
                 sums[col] += sum;
                 row++;
             }
@@ -455,23 +462,23 @@ namespace Benutzerverwaltung
             Grid.SetRow(bd, row);
             DataGrid.Children.Add(bd);
         }
-        private void CreateButton(string text, int column, int row, int id, View view, Mode mode)
+        private void CreateButton(string text, int column, int row, int id, View view, Mode mode, User? user)
         {
-            (int id, View view, Mode mode) vt = new(id, view, mode);
+            (int id, View view, Mode mode, User? user) vt = new(id, view, mode, user);
             Button bt = new Button()
             {
                 Margin = new Thickness(5),
                 Content = text,
                 Tag = vt,
-                Background = (mode == Mode.Delete) ? Brushes.MistyRose : (mode == Mode.CreateNew) ? Brushes.Azure : Brushes.YellowGreen,
-                Foreground = (mode == Mode.Delete) ? Brushes.Red : (mode == Mode.CreateNew) ? Brushes.Blue : Brushes.Green
+                Background = (mode == Mode.Delete) ? DeleteBackground : (mode == Mode.CreateNew) ? CreateBackground : AdminBackground,
+                Foreground = (mode == Mode.Delete) ? DeleteForeground : (mode == Mode.CreateNew) ? CreateForeground : AdminForeground
             };
             bt.Click += ClickButton;
             Border bd = new Border()
             {
                 BorderThickness = new Thickness(1),
-                BorderBrush = (mode == Mode.Delete) ? Brushes.Red : (mode == Mode.CreateNew) ? Brushes.Blue : Brushes.Green,
-                Background = (mode == Mode.Delete) ? Brushes.MistyRose : (mode == Mode.CreateNew) ? Brushes.Azure : Brushes.YellowGreen,
+                BorderBrush = (mode == Mode.Delete) ? DeleteForeground : (mode == Mode.CreateNew) ? CreateForeground : AdminForeground,
+                Background = (mode == Mode.Delete) ? DeleteBackground : (mode == Mode.CreateNew) ? CreateBackground : AdminBackground,
                 Margin = new Thickness(5),
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Left,
@@ -547,10 +554,10 @@ namespace Benutzerverwaltung
             int thisyear = today.Year;
             foreach(var user in lu)
             {
-                foreach(var jub in lj)
+                int birthyear = user.Geburtstag.Year;
+                int joinyear = user.Eintrittsdatum.Year;
+                foreach (var jub in lj)
                 {
-                    int birthyear = user.Geburtstag.Year;
-                    int joinyear = user.Eintrittsdatum.Year;
                     if(thisyear - birthyear == jub.Jahre) currentJubs.Add((user, jub, JubilaeumMode.Birthday));
                     if(thisyear - joinyear == jub.Jahre) currentJubs.Add((user, jub, JubilaeumMode.Join));
                 }
@@ -628,14 +635,14 @@ namespace Benutzerverwaltung
         private void ClickButton(object sender, RoutedEventArgs e)
         {
             Button bt = (Button)sender;
-            var btinfo = ((int id, View view, Mode mode))bt.Tag;
+            var btinfo = ((int id, View view, Mode mode, User? user))bt.Tag;
             switch (btinfo.mode)
             {
                 case Mode.Delete:
                     Delete(btinfo.id, btinfo.view);
                     break;
                 default:
-                    Admin(btinfo.id, btinfo.view, btinfo.mode);
+                    Admin(btinfo.id, btinfo.view, btinfo.mode, btinfo.user);
                     break;
             }
         }
@@ -711,9 +718,10 @@ namespace Benutzerverwaltung
             }
         }
 
-        private void Admin(int id, View view, Mode mode)
+        private void Admin(int id, View view, Mode mode, User? user)
         {
-
+            ConfigWindow child = new ConfigWindow(this, id, view, mode, dbc, statics, variables, user);
+            child.Show();
         }
 
         private void SearchTextChanged(object sender, KeyEventArgs e)
