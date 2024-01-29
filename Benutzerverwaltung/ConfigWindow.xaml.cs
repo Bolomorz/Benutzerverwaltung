@@ -159,6 +159,7 @@ namespace Benutzerverwaltung
             ControlsGrid.RowDefinitions.Clear();
 
             ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //0Wert
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });
 
             CreateTextBlock(ControlsGrid, "Jahre", 0, 0);
 
@@ -166,11 +167,13 @@ namespace Benutzerverwaltung
             {
                 CreateTextBox(ControlsGrid, "", "tbjubwert", 1, 0);
                 TBView.Text = "Neues Jubiläum";
+                CreateButton("Jubiläum erstellen", 0, 1);
             }
             else
             {
                 CreateTextBox(ControlsGrid, j.Jahre.ToString(), "tbjubwert", 1, 0);
                 TBView.Text = "Jubiläum ändern";
+                CreateButton("Jubiläum ändern", 0, 1);
             }
         }
         private void CCStatic(Static? s)
@@ -183,6 +186,7 @@ namespace Benutzerverwaltung
             ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //0Name
             ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //1Wert
             ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //2Default
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });
 
             CreateTextBlock(ControlsGrid, "Name", 0, 0);
             CreateTextBlock(ControlsGrid, "Wert", 0, 1);
@@ -194,6 +198,7 @@ namespace Benutzerverwaltung
                 CreateTextBox(ControlsGrid, "", "tbstaticwert", 1, 1);
                 CreateCheckBox(ControlsGrid, "Aktiviert", "cbstaticdefault", false, 1, 2);
                 TBView.Text = "Neuer Statischer Posten";
+                CreateButton("Statischen Posten erstellen", 0, 3);
             }
             else
             {
@@ -201,6 +206,7 @@ namespace Benutzerverwaltung
                 CreateTextBox(ControlsGrid, s.Wert.ToString(), "tbstaticwert", 1, 1);
                 CreateCheckBox(ControlsGrid, "Aktiviert", "cbstaticdefault", s.Default, 1, 2);
                 TBView.Text = "Statischen Posten ändern";
+                CreateButton("Statischen Posten ändern", 0, 3);
             }
         }
         private void CCVariable(Variable? v)
@@ -213,14 +219,15 @@ namespace Benutzerverwaltung
             ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //0Name
             ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //1Formel
             ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //2Default
-            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(200, GridUnitType.Pixel) }); 
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(100, GridUnitType.Pixel) });
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });
 
             CreateTextBlock(ControlsGrid, "Name", 0, 0);
             CreateTextBlock(ControlsGrid, "Formel", 0, 1);
             CreateTextBlock(ControlsGrid, "Standart Wert", 0, 2);
             CreateTextBlock(ControlsGrid, "Information zur Formel", 0, 3);
-            CreateTextBlock(ControlsGrid, "W ist Platzhalter für den Wert der in die Formel eingesetzt wird.\n" +
-                                            "Zu verwendete Zeichen: (,),+,-,/,*\n" +
+            CreateTextBlock(ControlsGrid, "W ist Platzhalter für den Wert, der in die Formel eingesetzt wird.\n" +
+                                            "Zu verwendete Zeichen: (,),+,-,/,*,Zahlen\n" +
                                             "Falls nichts berechnet werden soll -> Formel ist 'W'", 1, 3);
             if(v is null)
             {
@@ -228,6 +235,7 @@ namespace Benutzerverwaltung
                 CreateTextBox(ControlsGrid, "W", "tbvariableformel", 1, 1);
                 CreateTextBox(ControlsGrid, "", "tbvariabledefault", 1, 2);
                 TBView.Text = "Neuer Variabler Posten";
+                CreateButton("Variablen Posten erstellen", 0, 4);
             }
             else
             {
@@ -235,6 +243,7 @@ namespace Benutzerverwaltung
                 CreateTextBox(ControlsGrid, v.Formel, "tbvariableformel", 1, 1);
                 CreateTextBox(ControlsGrid, v.Default.ToString(), "tbvariabledefault", 1, 2);
                 TBView.Text = "Variablen Posten ändern";
+                CreateButton("Variablen Posten ändern", 0, 4);
             }
         }
         private void CCBenutzer()
@@ -499,52 +508,116 @@ namespace Benutzerverwaltung
         }
         private void ClickAccept(object sender, RoutedEventArgs e)
         {
+            (string aktion, bool erfolgreich) success;
             switch (this.view)
             {
                 case View.Benutzer:
                     break;
                 case View.StatischePosten:
+                    success = (this.mode == Mode.CreateNew) ? CreateStatic() : ChangeStatic();
+                    if (success.erfolgreich) MessageBox.Show(string.Format("{0} erfolgreich!", success.aktion)); else MessageBox.Show(string.Format("{0} nicht erfolgreich!", success.aktion));
+                    parent.Reload();
+                    this.Close();
                     break;
                 case View.VariablePosten:
                     break;
                 case View.Jubilaeen:
-                    break;
-                case View.GesamtAktuell:
-                    bool success = (this.mode == Mode.CreateNew) ? CreateJub() : ChangeJub();
-                    if (success) MessageBox.Show("Aktion erfolgreich!"); else MessageBox.Show("Aktion nicht erfolgreich!");
+                    success = (this.mode == Mode.CreateNew) ? CreateJub() : ChangeJub();
+                    if (success.erfolgreich) MessageBox.Show(string.Format("{0} erfolgreich!", success.aktion)); else MessageBox.Show(string.Format("{0} nicht erfolgreich!", success.aktion));
                     parent.Reload();
                     this.Close();
                     break;
+                case View.GesamtAktuell:
+                    break;
             }
         }
-        private bool ChangeJub()
+
+        private (string aktion, bool erfolgreich) ChangeVariable()
+        {
+
+        }
+        private (string aktion, bool erfolgreich) CreateVariable()
+        {
+
+        }
+        private (string aktion, bool erfolgreich) ChangeStatic()
+        {
+            var tbstaticname = SearchTextBoxes("tbstaticname");
+            var tbstaticwert = SearchTextBoxes("tbstaticwert");
+            var cbstaticdefault = SearchCheckBoxes("cbstaticdefault");
+            if(tbstaticname is not null && tbstaticwert is not null && cbstaticdefault is not null)
+            {
+                var err = dbc.CommandNonQuery(string.Format("UPDATE StatischeRechnungsPosten SET Beschreibung='{0}', Wert={1}, Def={2} WHERE SRPID={3};", tbstaticname, StringToDecimal(tbstaticwert), cbstaticdefault, id));
+                if (err is not null) ErrorLogging.Log(err);
+                else return ("Statischen Posten ändern", true);
+            }
+            return ("Statischen Posten ändern", false);
+        }
+        private (string aktion, bool erfolgreich) CreateStatic()
+        {
+            var tbstaticname = SearchTextBoxes("tbstaticname");
+            var tbstaticwert = SearchTextBoxes("tbstaticwert");
+            var cbstaticdefault = SearchCheckBoxes("cbstaticdefault");
+            if (tbstaticname is not null && tbstaticwert is not null && cbstaticdefault is not null)
+            {
+                var query = dbc.CommandQueryToList("SELECT SRPID FROM StatischeRechnungsPosten;");
+                if (query.error is not null) ErrorLogging.Log(query.error);
+                else if(query.solution is not null && query.solution.Count > 0) 
+                {
+                    var err = dbc.CommandNonQuery(string.Format("INSERT INTO StatischeRechnungsPosten (SRPID, Beschreibung, Wert, Def) VALUES((SELECT MAX(SRPID) FROM StatischeRechnungsPosten) + 1, '{0}', {1}, {2});",
+                         tbstaticname, StringToDecimal(tbstaticwert), cbstaticdefault));
+                    if (err is not null) ErrorLogging.Log(err);
+                    else return ("Statischen Posten erstellen", true);
+                }
+                else
+                {
+                    var err = dbc.CommandNonQuery(string.Format("INSERT INTO StatischeRechnungsPosten (SRPID, Beschreibung, Wert, Def) VALUES(0, '{0}', {1}, {2});",
+                         tbstaticname, StringToDecimal(tbstaticwert), cbstaticdefault));
+                    if (err is not null) ErrorLogging.Log(err);
+                    else return ("Statischen Posten erstellen", true);
+                }
+            }
+            return ("Statischen Posten erstellen", false);
+        }
+        private (string aktion, bool erfolgreich) ChangeJub()
         {
             var tbjubwert = SearchTextBoxes("tbjubwert");
             if (tbjubwert is not null) {
-                var err = dbc.CommandNonQuery(string.Format("UPDATE Jubilaeum SET Jahre={0} WHERE JID={1};COMMIT;", tbjubwert, id));
+                var err = dbc.CommandNonQuery(string.Format("UPDATE Jubilaeum SET Jahre={0} WHERE JID={1};", StringToInt(tbjubwert), id));
                 if (err is not null) ErrorLogging.Log(err);
-                else return true;
+                else return ("Jubiläum ändern", true);
             }
-            return false;
+            return ("Jubiläum ändern", false);
         }
-        private bool CreateJub()
+        private (string aktion, bool erfolgreich) CreateJub()
         {
             var tbjubwert = SearchTextBoxes("tbjubwert");
             if(tbjubwert is not null)
             {
-                var err = dbc.CommandNonQuery(string.Format("INSERT INTO Jubilaeum (Jahre) VALUES('{0}');COMMIT;", tbjubwert));
-                if (err is not null) ErrorLogging.Log(err);
-                else return true;
+                var query = dbc.CommandQueryToList("SELECT JID FROM Jubilaeum;");
+                if (query.error is not null) ErrorLogging.Log(query.error);
+                else if (query.solution is not null && query.solution.Count > 0)
+                {
+                    var err = dbc.CommandNonQuery(string.Format("INSERT INTO Jubilaeum (JID, Jahre) VALUES((SELECT MAX(JID) FROM Jubilaeum) + 1, {0});", tbjubwert));
+                    if (err is not null) ErrorLogging.Log(err);
+                    else return ("Jubiläum erstellen", true);
+                }
+                else
+                {
+                    var err = dbc.CommandNonQuery(string.Format("INSERT INTO Jubilaeum (JID, Jahre) VALUES(0, {0});", tbjubwert));
+                    if (err is not null) ErrorLogging.Log(err);
+                    else return ("Jubiläum erstellen", true);
+                }
             }
-            return false;
+            return ("Jubiläum erstellen", false);
         }
-        private bool ChangeUser()
+        private (string aktion, bool erfolgreich) ChangeUser()
         {
-
+            return ("Benutzer ändern", false);
         }
-        private bool CreateUser()
+        private (string aktion, bool erfolgreich) CreateUser()
         {
-
+            return ("Benutzer erstellen", false);
         }
     }
 }

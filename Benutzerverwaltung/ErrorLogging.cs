@@ -11,7 +11,6 @@ namespace Benutzerverwaltung
     {
         public static void Log(string message)
         {
-            if (!File.Exists("errorlog.txt")) File.Create("errorlog.txt");
             DateTime now = DateTime.Now;
             List<string> errors = new List<string>() { string.Format("{0}: {1}", now, message)};
             File.AppendAllLines("errorlog.txt", errors);

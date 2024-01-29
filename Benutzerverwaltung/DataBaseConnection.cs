@@ -43,29 +43,29 @@ namespace Benutzerverwaltung
                 List<string> sqlcommands = new List<string>
                 {
                     @"CREATE TABLE IF NOT EXISTS Benutzer(
-                                    BID int AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                                    BID int PRIMARY KEY NOT NULL,
                                     Name varchar(255) NOT NULL,
                                     Vorname varchar(255) NOT NULL,
                                     Strasse varchar(255) NOT NULL,
                                     PLZ int NOT NULL,
                                     Ort varchar(255) NOT NULL,
-                                    Geburtsdatum date NOT NULL,
-                                    Eintrittsdsatum date NOT NULL);",
+                                    Geburtsdatum datetime NOT NULL,
+                                    Eintrittsdatum datetime NOT NULL);",
 
                     @"CREATE TABLE IF NOT EXISTS StatischeRechnungsPosten(
-                                    SRPID int AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                                    SRPID int PRIMARY KEY NOT NULL,
                                     Beschreibung varchar(255) NOT NULL,
                                     Wert decimal(10,2) NOT NULL,
                                     Def boolean NOT NULL);",
 
                     @"CREATE TABLE IF NOT EXISTS VariableRechnungsPosten(
-                                    VRPID int AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                                    VRPID int PRIMARY KEY NOT NULL,
                                     Beschreibung varchar(255) NOT NULL,
                                     Formel varchar(255) NOT NULL,
                                     Def decimal(10,2) NOT NULL);",
 
                     @"CREATE TABLE IF NOT EXISTS BenutzerStatisch(
-                                    BSID int AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                                    BSID int PRIMARY KEY NOT NULL,
                                     BID int NOT NULL,
                                     SRPID int NOT NULL,
                                     Aktiv boolean NOT NULL,
@@ -73,7 +73,7 @@ namespace Benutzerverwaltung
                                     FOREIGN KEY(SRPID) REFERENCES StatischeRechnungsPosten(SRPID));",
 
                     @"CREATE TABLE IF NOT EXISTS BenutzerVariable(
-                                    BVID int AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                                    BVID int PRIMARY KEY NOT NULL,
                                     BID int NOT NULL,
                                     VRPID int NOT NULL,
                                     Wert decimal(10,2) NOT NULL,
@@ -81,7 +81,7 @@ namespace Benutzerverwaltung
                                     FOREIGN KEY(VRPID) REFERENCES VariableRechnungsPosten(VRPID));",
 
                     @"CREATE TABLE IF NOT EXISTS Jubilaeum(
-                                    JID int AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                                    JID int PRIMARY KEY NOT NULL,
                                     Jahre int NOT NULL);"
                 };
 
