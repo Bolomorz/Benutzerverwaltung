@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.SqlServer.Server;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -32,6 +33,7 @@ namespace Benutzerverwaltung
         User? user;
 
         List<TextBox> boxes;
+        List<CheckBox> checkboxes;
 
         public ConfigWindow(MainWindow _parent, int _id, View _view, Mode _mode, DataBaseConnection _dbc, List<Static> _statics, List<Variable> _variables, User? _user)
         {
@@ -41,22 +43,204 @@ namespace Benutzerverwaltung
             this.mode = _mode;
             this.id = _id;
             this.boxes = new List<TextBox>();
+            this.checkboxes = new List<CheckBox>();
             this.dbc = _dbc;
             this.GridStatics = new Grid();
             this.GridVariables = new Grid();
             this.statics = _statics;
             this.variables = _variables;
             this.user = _user;
+            CreateControls();
+        }
+
+        private static decimal StringToDecimal(string input)
+        {
+            string newval = "";
+
+            foreach (var c in input)
+            {
+                if (IsNumeric(c))
+                {
+                    newval += c;
+                }
+                else if (c == ',' || c == '.')
+                {
+                    newval += System.Globalization.NumberFormatInfo.CurrentInfo.NumberDecimalSeparator;
+                }
+            }
+
+            if (newval != "")
+            {
+                return decimal.Parse(newval, System.Globalization.NumberStyles.AllowDecimalPoint);
+            }
+            else
+            {
+                return 0;
+            }
+        }
+        private static int StringToInt(string input)
+        {
+            string output = "";
+            foreach(var c in input) if(IsNumeric(c)) output += c;
+            return int.Parse(output);
+        }
+        private static bool IsNumeric(char input)
+        {
+            if (input == '0' || input == '1' || input == '2' || input == '3' || input == '4' || input == '5' || input == '6' || input == '7' || input == '8' || input == '9') return true; else return false;
         }
 
         private void CreateControls()
         {
-
+            switch (this.view)
+            {
+                case View.Benutzer:
+                    CCBenutzer(); break;
+                case View.StatischePosten:
+                    if (this.mode == Mode.Administrate)
+                    {
+                        var query = dbc.CommandQueryToList(string.Format("SELECT * FROM StatischeRechnungsPosten WHERE SRPID={0};", id));
+                        if (query.error is not null) ErrorLogging.Log(query.error.ToString());
+                        else if (query.solution is not null && query.solution.Count > 0)
+                        {
+                            var s = query.solution[0];
+                            var newstatic = new Static((int)s[0], (string)s[1], (decimal)s[2], (bool)s[3]);
+                            CCStatic(newstatic);
+                        }
+                    }
+                    else
+                    {
+                        CCStatic(null);
+                    }
+                    break;
+                case View.VariablePosten:
+                    if(this.mode == Mode.Administrate)
+                    {
+                        var query = dbc.CommandQueryToList(string.Format("SELECT * FROM VariableRechnungsPosten WHERE VRPID={0};", id));
+                        if (query.error is not null) ErrorLogging.Log(query.error.ToString());
+                        else if (query.solution is not null && query.solution.Count > 0)
+                        {
+                            var v = query.solution[0];
+                            var newvariable = new Variable((int)v[0], (string)v[1], (string)v[2], (decimal)v[3]);
+                            CCVariable(newvariable);
+                        }
+                    }
+                    else
+                    {
+                        CCVariable(null);
+                    }
+                    break;
+                case View.Jubilaeen:
+                    if(mode == Mode.Administrate)
+                    {
+                        var query = dbc.CommandQueryToList(string.Format("SELECT * FROM Jubilaeum WHERE JID={0};", id));
+                        if (query.error is not null) ErrorLogging.Log(query.error.ToString());
+                        else if (query.solution is not null && query.solution.Count > 0)
+                        {
+                            var j = query.solution[0];
+                            var newjub = new Jubilaeum((int)j[0], (int)j[1]);
+                            CCJub(newjub);
+                        }
+                    }
+                    else
+                    {
+                        CCJub(null);
+                    }
+                    break;
+                case View.GesamtAktuell:
+                    CCBenutzer(); break;
+            }
         }
 
+        private void CCJub(Jubilaeum? j)
+        {
+            this.boxes.Clear();
+            this.checkboxes.Clear();
+            ControlsGrid.Children.Clear();
+            ControlsGrid.RowDefinitions.Clear();
+
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //0Wert
+
+            CreateTextBlock(ControlsGrid, "Jahre", 0, 0);
+
+            if(j is null)
+            {
+                CreateTextBox(ControlsGrid, "", "tbjubwert", 1, 0);
+                TBView.Text = "Neues Jubiläum";
+            }
+            else
+            {
+                CreateTextBox(ControlsGrid, j.Jahre.ToString(), "tbjubwert", 1, 0);
+                TBView.Text = "Jubiläum ändern";
+            }
+        }
+        private void CCStatic(Static? s)
+        {
+            this.boxes.Clear();
+            this.checkboxes.Clear();
+            ControlsGrid.Children.Clear();
+            ControlsGrid.RowDefinitions.Clear();
+
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //0Name
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //1Wert
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //2Default
+
+            CreateTextBlock(ControlsGrid, "Name", 0, 0);
+            CreateTextBlock(ControlsGrid, "Wert", 0, 1);
+            CreateTextBlock(ControlsGrid, "Wert standartmäßig aktiviert?", 0, 2);
+
+            if(s is null)
+            {
+                CreateTextBox(ControlsGrid, "", "tbstaticname", 1, 0);
+                CreateTextBox(ControlsGrid, "", "tbstaticwert", 1, 1);
+                CreateCheckBox(ControlsGrid, "Aktiviert", "cbstaticdefault", false, 1, 2);
+                TBView.Text = "Neuer Statischer Posten";
+            }
+            else
+            {
+                CreateTextBox(ControlsGrid, s.Name, "tbstaticname", 1, 0);
+                CreateTextBox(ControlsGrid, s.Wert.ToString(), "tbstaticwert", 1, 1);
+                CreateCheckBox(ControlsGrid, "Aktiviert", "cbstaticdefault", s.Default, 1, 2);
+                TBView.Text = "Statischen Posten ändern";
+            }
+        }
+        private void CCVariable(Variable? v)
+        {
+            this.boxes.Clear();
+            this.checkboxes.Clear();
+            ControlsGrid.Children.Clear();
+            ControlsGrid.RowDefinitions.Clear();
+
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //0Name
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //1Formel
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //2Default
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(200, GridUnitType.Pixel) }); 
+
+            CreateTextBlock(ControlsGrid, "Name", 0, 0);
+            CreateTextBlock(ControlsGrid, "Formel", 0, 1);
+            CreateTextBlock(ControlsGrid, "Standart Wert", 0, 2);
+            CreateTextBlock(ControlsGrid, "Information zur Formel", 0, 3);
+            CreateTextBlock(ControlsGrid, "W ist Platzhalter für den Wert der in die Formel eingesetzt wird.\n" +
+                                            "Zu verwendete Zeichen: (,),+,-,/,*\n" +
+                                            "Falls nichts berechnet werden soll -> Formel ist 'W'", 1, 3);
+            if(v is null)
+            {
+                CreateTextBox(ControlsGrid, "", "tbvariablename", 1, 0);
+                CreateTextBox(ControlsGrid, "W", "tbvariableformel", 1, 1);
+                CreateTextBox(ControlsGrid, "", "tbvariabledefault", 1, 2);
+                TBView.Text = "Neuer Variabler Posten";
+            }
+            else
+            {
+                CreateTextBox(ControlsGrid, v.Name, "tbvariablename", 1, 0);
+                CreateTextBox(ControlsGrid, v.Formel, "tbvariableformel", 1, 1);
+                CreateTextBox(ControlsGrid, v.Default.ToString(), "tbvariabledefault", 1, 2);
+                TBView.Text = "Variablen Posten ändern";
+            }
+        }
         private void CCBenutzer()
         {
             this.boxes.Clear();
+            this.checkboxes.Clear();
             ControlsGrid.Children.Clear();
             ControlsGrid.RowDefinitions.Clear();
 
@@ -77,14 +261,36 @@ namespace Benutzerverwaltung
             CreateTextBlock(ControlsGrid, "Statische Posten", 0, 7); CreateTextBlock(ControlsGrid, "Variable Posten", 0, 8); CreateButton("Annehmen", 0, 9);
             if(user is null)
             {
-
+                CreateTextBox(ControlsGrid, "", "tbusername", 1, 0);
+                CreateTextBox(ControlsGrid, "", "tbuservorname", 1, 1);
+                CreateTextBox(ControlsGrid, "", "tbuserstrasse", 1, 2);
+                CreateTextBox(ControlsGrid, "", "tbuserplz", 1, 3);
+                CreateTextBox(ControlsGrid, "", "tbuserort", 1, 4);
+                CreateTextBox(ControlsGrid, "", "tbusergeburtsdatum", 1, 5);
+                CreateTextBox(ControlsGrid, "", "tbusereintrittsdatum", 1, 6);
+                CreateSubGrid(GridStatics, 1, 7);
+                CCBenutzerStatics();
+                CreateSubGrid(GridVariables, 1, 8);
+                CCBenutzerVariables();
+                TBView.Text = "Neuer Benutzer";
             }
             else
             {
-
+                CreateTextBox(ControlsGrid, user.Name, "tbusername", 1, 0);
+                CreateTextBox(ControlsGrid, user.Vorname, "tbuservorname", 1, 1);
+                CreateTextBox(ControlsGrid, user.Strasse, "tbuserstrasse", 1, 2);
+                CreateTextBox(ControlsGrid, user.PLZ.ToString(), "tbuserplz", 1, 3);
+                CreateTextBox(ControlsGrid, user.Ort, "tbuserort", 1, 4);
+                CreateTextBox(ControlsGrid, user.Geburtstag.Date.ToString(), "tbusergeburtsdatum", 1, 5);
+                CreateTextBox(ControlsGrid, user.Eintrittsdatum.Date.ToString(), "tbusereintrittsdatum", 1, 6);
+                CreateSubGrid(GridStatics, 1, 7);
+                CCBenutzerStatics(user.statics);
+                CreateSubGrid(GridVariables, 1, 8);
+                CCBenutzerVariables(user.variables);
+                TBView.Text = "Benutzer ändern";
             }
         }
-        private void CCBenutzerStatics()
+        private void CCBenutzerStatics(List<(Static s, bool b)>? defaults = null)
         {
             GridStatics.Children.Clear();
             GridStatics.ColumnDefinitions.Clear();
@@ -104,8 +310,57 @@ namespace Benutzerverwaltung
                 CreateTextBlock(GridStatics, s.Id.ToString(), 0, row);
                 CreateTextBlock(GridStatics, s.Name, 1, row);
                 CreateTextBlock(GridStatics, s.Wert.ToString(), 2, row);
+                if (defaults is null)
+                {
+                    CreateCheckBox(GridStatics, "Aktivieren", string.Format("cbstatic{0}{1}", s.Id, s.Name), s.Default, 3, row);
+                }
+                else
+                {
+                    CreateCheckBox(GridStatics, "Aktivieren", string.Format("cbstatic{0}{1}", s.Id, s.Name), FindStaticDefault(defaults, s), 3, row);
+                }
                 row++;
             }
+        }
+        private bool FindStaticDefault(List<(Static s, bool b)> values, Static s)
+        {
+            foreach (var v in values) if (s == v.s) return v.b;
+            return false;
+        }
+        private void CCBenutzerVariables(List<(Variable v, decimal w)>? defaults = null)
+        {
+            GridVariables.Children.Clear();
+            GridVariables.ColumnDefinitions.Clear();
+            GridVariables.RowDefinitions.Clear();
+
+            GridVariables.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });         //ID
+            GridVariables.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });         //Name
+            GridVariables.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });         //Formel
+            GridVariables.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });         //TextBox
+
+            for (int i = 0; i < variables.Count + 2; i++) GridVariables.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });
+
+            CreateTextBlock(GridVariables, "ID", 0, 0); CreateTextBlock(GridVariables, "Name", 1, 0); CreateTextBlock(GridVariables, "Formel", 2, 0); CreateTextBlock(GridVariables, "Wert", 3, 0);
+            int row = 1;
+            foreach(var v in variables)
+            {
+                CreateTextBlock(GridVariables, v.Id.ToString(), 0, row);
+                CreateTextBlock(GridVariables, v.Name, 1, row);
+                CreateTextBlock(GridVariables, v.Formel, 2, row);
+                if(defaults is null)
+                {
+                    CreateTextBox(GridVariables, 0.ToString(), string.Format("tbvariable{0}{1}", v.Id, v.Name), 3, row);
+                }
+                else
+                {
+                    CreateTextBox(GridVariables, FindVariableDefault(defaults, v).ToString(), string.Format("tb{0}{1}", v.Id, v.Name), 3, row);
+                }
+                row++;
+            }
+        }
+        private decimal FindVariableDefault(List<(Variable v, decimal w)> values, Variable v)
+        {
+            foreach (var value in values) if (value.v == v) return value.w;
+            return 0;
         }
 
         private void CreateSubGrid(Grid grid, int column, int row)
@@ -179,7 +434,8 @@ namespace Benutzerverwaltung
             {
                 Margin = new Thickness(5),
                 Text = text,
-                Name = name
+                Name = name,
+                MinWidth = 50
             };
             Border bd = new Border()
             {
@@ -218,12 +474,21 @@ namespace Benutzerverwaltung
             Grid.SetColumn(bd, column);
             Grid.SetRow(bd, row);
             grid.Children.Add(bd);
+            checkboxes.Add(cb);
         }
         private string? SearchTextBoxes(string name)
         {
             foreach(var tb in boxes)
             {
                 if(tb.Name == name) return tb.Text;
+            }
+            return null;
+        }
+        private bool? SearchCheckBoxes(string name)
+        {
+            foreach(var cb in checkboxes)
+            {
+                if (cb.Name == name) return cb.IsChecked;
             }
             return null;
         }
@@ -234,8 +499,52 @@ namespace Benutzerverwaltung
         }
         private void ClickAccept(object sender, RoutedEventArgs e)
         {
+            switch (this.view)
+            {
+                case View.Benutzer:
+                    break;
+                case View.StatischePosten:
+                    break;
+                case View.VariablePosten:
+                    break;
+                case View.Jubilaeen:
+                    break;
+                case View.GesamtAktuell:
+                    bool success = (this.mode == Mode.CreateNew) ? CreateJub() : ChangeJub();
+                    if (success) MessageBox.Show("Aktion erfolgreich!"); else MessageBox.Show("Aktion nicht erfolgreich!");
+                    parent.Reload();
+                    this.Close();
+                    break;
+            }
+        }
+        private bool ChangeJub()
+        {
+            var tbjubwert = SearchTextBoxes("tbjubwert");
+            if (tbjubwert is not null) {
+                var err = dbc.CommandNonQuery(string.Format("UPDATE Jubilaeum SET Jahre={0} WHERE JID={1};COMMIT;", tbjubwert, id));
+                if (err is not null) ErrorLogging.Log(err);
+                else return true;
+            }
+            return false;
+        }
+        private bool CreateJub()
+        {
+            var tbjubwert = SearchTextBoxes("tbjubwert");
+            if(tbjubwert is not null)
+            {
+                var err = dbc.CommandNonQuery(string.Format("INSERT INTO Jubilaeum (Jahre) VALUES('{0}');COMMIT;", tbjubwert));
+                if (err is not null) ErrorLogging.Log(err);
+                else return true;
+            }
+            return false;
+        }
+        private bool ChangeUser()
+        {
 
         }
+        private bool CreateUser()
+        {
 
+        }
     }
 }

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Benutzerverwaltung"
         mc:Ignorable="d"
-        Title="ConfigWindow" Height="800" Width="800">
+        Title="ConfigWindow" Height="900" Width="800">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>

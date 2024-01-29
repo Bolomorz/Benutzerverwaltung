@@ -70,7 +70,7 @@ namespace Benutzerverwaltung
             variables.Clear();
             jubilaeen.Clear();
             var query = dbc.CommandQueryToList("SELECT BID, Name, Vorname, Strasse, PLZ, Ort, Geburtsdatum, Eintrittsdatum FROM Benutzer;");
-            if(query.error is not null) Console.Error.WriteLine(query.error.ToString());
+            if(query.error is not null) ErrorLogging.Log(query.error.ToString());
             else if(query.solution is not null)
             {
                 foreach(var user in query.solution)
@@ -83,21 +83,21 @@ namespace Benutzerverwaltung
                 }
             }
             query = dbc.CommandQueryToList("SELECT * FROM StatischeRechnungsPosten;");
-            if (query.error is not null) Console.Error.WriteLine(query.error.ToString());
+            if (query.error is not null) ErrorLogging.Log(query.error.ToString());
             else if(query.solution is not null)
             {
                 foreach(var s in query.solution)
                 {
-                    statics.Add(new Static((int)s[0], (string)s[1], (decimal)s[2]));
+                    statics.Add(new Static((int)s[0], (string)s[1], (decimal)s[2], (bool)s[3]));
                 }
             }
             query = dbc.CommandQueryToList("SELECT * FROM VariableRechnungsPosten;");
-            if(query.error is not null) Console.Error.WriteLine(query.error.ToString());
+            if(query.error is not null) ErrorLogging.Log(query.error.ToString());
             else if(query.solution is not null)
             {
                 foreach(var v in query.solution)
                 {
-                    variables.Add(new Variable((int)v[0], (string)v[1], (string)v[2]));
+                    variables.Add(new Variable((int)v[0], (string)v[1], (string)v[2], (decimal)v[3]));
                 }
             }
             foreach(var us in users)
@@ -105,7 +105,7 @@ namespace Benutzerverwaltung
                 foreach(var st in statics)
                 {
                     query = dbc.CommandQueryToList(string.Format("SELECT Aktiv FROM BenutzerStatisch WHERE BID={0} AND SRPID={1};", us.Id, st.Id));
-                    if(query.error is not null) Console.Error.WriteLine(query.error.ToString());
+                    if(query.error is not null) ErrorLogging.Log(query.error.ToString());
                     else if(query.solution is not null)
                     {
                         if(query.solution.Count() > 0 && query.solution[0].Count > 0)
@@ -122,7 +122,7 @@ namespace Benutzerverwaltung
                 foreach (var v in variables)
                 {
                     query = dbc.CommandQueryToList(string.Format("SELECT Wert FROM BenutzerVariable WHERE BID={0} AND VRPID={1};", us.Id, v.Id));
-                    if (query.error is not null) Console.Error.WriteLine(query.error.ToString());
+                    if (query.error is not null) ErrorLogging.Log(query.error.ToString());
                     else if (query.solution is not null)
                     {
                         if (query.solution.Count() > 0 && query.solution[0].Count > 0)
@@ -137,7 +137,7 @@ namespace Benutzerverwaltung
                 }
             }
             query = dbc.CommandQueryToList("SELECT * FROM Jubilaeum;");
-            if (query.error is not null) Console.Error.WriteLine(query.error.ToString());
+            if (query.error is not null) ErrorLogging.Log(query.error.ToString());
             else if(query.solution is not null)
             {
                 foreach(var j in query.solution)
@@ -654,63 +654,63 @@ namespace Benutzerverwaltung
             {
                 case View.Benutzer:
                     query = dbc.CommandQueryToList(string.Format("SELECT * FROM Benutzer WHERE BID={0}", id));
-                    if (query.error is not null) Console.Error.WriteLine(query.error);
+                    if (query.error is not null) ErrorLogging.Log(query.error);
                     else if (query.solution is not null && query.solution.Count > 0 && query.solution[0].Count > 0) {
-                        string text = string.Format("Möchten Sie folgenden Nutzer unwiderruflich löschen?\n{0} {1} {2} {3} {4}", query.solution[0][0], query.solution[0][1], query.solution[0][2], query.solution[0][3], query.solution[0][4]);
+                        string text = string.Format("Möchten Sie folgenden Benutzer unwiderruflich löschen?\n{0} {1} {2} {3} {4}", query.solution[0][0], query.solution[0][1], query.solution[0][2], query.solution[0][3], query.solution[0][4]);
                         if (MessageBoxResult.Yes == MessageBox.Show(text, "Löschen", MessageBoxButton.YesNoCancel))
                         {
                             var err = dbc.CommandNonQuery(string.Format("DELETE FROM Benutzer WHERE BID={0}", id));
-                            if(err is not null) Console.Error.WriteLine(err);
+                            if(err is not null) ErrorLogging.Log(err);
                             err = dbc.CommandNonQuery(string.Format("DELETE FROM BenutzerStatisch WHERE BID={0}", id));
-                            if (err is not null) Console.Error.WriteLine(err);
+                            if (err is not null) ErrorLogging.Log(err);
                             err = dbc.CommandNonQuery(string.Format("DELETE FROM BenutzerVariable WHERE BID={0}", id));
-                            if (err is not null) Console.Error.WriteLine(err);
+                            if (err is not null) ErrorLogging.Log(err);
                             Reload();
                         }
                     }
                     break;
                 case View.StatischePosten:
                     query = dbc.CommandQueryToList(string.Format("SELECT * FROM StatischeRechnungsPosten WHERE SRPID={0}", id));
-                    if (query.error is not null) Console.Error.WriteLine(query.error);
+                    if (query.error is not null) ErrorLogging.Log(query.error);
                     else if (query.solution is not null && query.solution.Count > 0 && query.solution[0].Count > 0)
                     {
                         string text = string.Format("Möchten Sie folgenden Statischen Rechnungsposten unwiderruflich löschen?\n{0} {1} {2}", query.solution[0][0], query.solution[0][1], query.solution[0][2]);
                         if (MessageBoxResult.Yes == MessageBox.Show(text, "Löschen", MessageBoxButton.YesNoCancel))
                         {
                             var err = dbc.CommandNonQuery(string.Format("DELETE FROM StatischeRechnungsPosten WHERE SRPID={0}", id));
-                            if (err is not null) Console.Error.WriteLine(err);
+                            if (err is not null) ErrorLogging.Log(err);
                             err = dbc.CommandNonQuery(string.Format("DELETE FROM BenutzerStatisch WHERE SRPID={0}", id));
-                            if (err is not null) Console.Error.WriteLine(err);
+                            if (err is not null) ErrorLogging.Log(err);
                             Reload();
                         }
                     }
                     break;
                 case View.VariablePosten:
                     query = dbc.CommandQueryToList(string.Format("SELECT * FROM VariableRechnungsPosten WHERE VRPID={0}", id));
-                    if (query.error is not null) Console.Error.WriteLine(query.error);
+                    if (query.error is not null) ErrorLogging.Log(query.error);
                     else if (query.solution is not null && query.solution.Count > 0 && query.solution[0].Count > 0)
                     {
                         string text = string.Format("Möchten Sie folgenden Variablen Rechnungsposten unwiderruflich löschen?\n{0} {1} {2}", query.solution[0][0], query.solution[0][1], query.solution[0][2]);
                         if (MessageBoxResult.Yes == MessageBox.Show(text, "Löschen", MessageBoxButton.YesNoCancel))
                         {
                             var err = dbc.CommandNonQuery(string.Format("DELETE FROM VariableRechnungsPosten WHERE VRPID={0}", id));
-                            if (err is not null) Console.Error.WriteLine(err);
+                            if (err is not null) ErrorLogging.Log(err);
                             err = dbc.CommandNonQuery(string.Format("DELETE FROM BenutzerVariable WHERE VRPID={0}", id));
-                            if (err is not null) Console.Error.WriteLine(err);
+                            if (err is not null) ErrorLogging.Log(err);
                             Reload();
                         }
                     }
                     break;
                 case View.Jubilaeen:
                     query = dbc.CommandQueryToList(string.Format("SELECT * FROM Jubilaeum WHERE JID={0}", id));
-                    if (query.error is not null) Console.Error.WriteLine(query.error);
+                    if (query.error is not null) ErrorLogging.Log(query.error);
                     else if (query.solution is not null && query.solution.Count > 0 && query.solution[0].Count > 0)
                     {
-                        string text = string.Format("Möchten Sie folgenden Variablen Rechnungsposten unwiderruflich löschen?\n{0} {1}", query.solution[0][0], query.solution[0][1]);
+                        string text = string.Format("Möchten Sie folgendes Jubiläum unwiderruflich löschen?\n{0} {1}", query.solution[0][0], query.solution[0][1]);
                         if (MessageBoxResult.Yes == MessageBox.Show(text, "Löschen", MessageBoxButton.YesNoCancel))
                         {
                             var err = dbc.CommandNonQuery(string.Format("DELETE FROM Jubilaeum WHERE JID={0}", id));
-                            if (err is not null) Console.Error.WriteLine(err);
+                            if (err is not null) ErrorLogging.Log(err);
                             Reload();
                         }
                     }

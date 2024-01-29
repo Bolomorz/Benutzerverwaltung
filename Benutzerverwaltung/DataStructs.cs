@@ -75,12 +75,14 @@ namespace Benutzerverwaltung
         public int Id;
         public string Name;
         public decimal Wert;
+        public bool Default;
 
-        public Static(int id, string name, decimal wert)
+        public Static(int id, string name, decimal wert, bool defaultvalue)
         {
             this.Id = id;
             this.Name = name;
             this.Wert = wert;
+            this.Default = defaultvalue;
         }
 
         public override int GetHashCode()
@@ -111,17 +113,19 @@ namespace Benutzerverwaltung
         public int Id;
         public string Name;
         public string Formel;
+        public decimal Default;
 
-        public Variable(int id, string name, string Formel)
+        public Variable(int id, string name, string Formel, decimal defaultvalue)
         {
             this.Id = id;
             this.Name = name;
             this.Formel = Formel;
+            this.Default = defaultvalue;
         }
 
         public decimal CalcValue(decimal input)
         {
-            if (Formel != "I" && Formel != string.Empty)
+            if (Formel != "W" && Formel != string.Empty)
             {
                 string? result = new DataTable().Compute(string.Format(Replace(Formel), input), "").ToString();
                 if (result is not null) return Decimal.Parse(result); else return input;
@@ -137,7 +141,7 @@ namespace Benutzerverwaltung
             string output = string.Empty;
             foreach(var c in input)
             {
-                if (c == 'I') output += "{0}"; else if(c != ' ') output += c;
+                if (c == 'W') output += "{0}"; else if(c != ' ') output += c;
             }
             return output;
         }
