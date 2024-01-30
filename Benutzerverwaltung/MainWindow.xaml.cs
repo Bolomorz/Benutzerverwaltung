@@ -720,7 +720,7 @@ namespace Benutzerverwaltung
 
         private void Admin(int id, View view, Mode mode, User? user)
         {
-            ConfigWindow child = new ConfigWindow(this, id, view, mode, dbc, statics, variables, user);
+            ConfigWindow child = new ConfigWindow(this, id, view, mode, dbc, statics, variables, users, user);
             child.Show();
         }
 

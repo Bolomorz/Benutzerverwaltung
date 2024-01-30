@@ -30,12 +30,13 @@ namespace Benutzerverwaltung
         Grid GridVariables;
         List<Static> statics;
         List<Variable> variables;
+        List<User> users;
         User? user;
 
         List<TextBox> boxes;
         List<CheckBox> checkboxes;
 
-        public ConfigWindow(MainWindow _parent, int _id, View _view, Mode _mode, DataBaseConnection _dbc, List<Static> _statics, List<Variable> _variables, User? _user)
+        public ConfigWindow(MainWindow _parent, int _id, View _view, Mode _mode, DataBaseConnection _dbc, List<Static> _statics, List<Variable> _variables, List<User> _users, User? _user)
         {
             InitializeComponent();
             this.parent = _parent;
@@ -49,10 +50,15 @@ namespace Benutzerverwaltung
             this.GridVariables = new Grid();
             this.statics = _statics;
             this.variables = _variables;
+            this.users = _users;
             this.user = _user;
             CreateControls();
         }
 
+        private static DateTime StringToDateTime(string input)
+        {
+            return DateTime.Parse(input);
+        }
         private static decimal StringToDecimal(string input)
         {
             string newval = "";
@@ -361,7 +367,7 @@ namespace Benutzerverwaltung
                 }
                 else
                 {
-                    CreateTextBox(GridVariables, FindVariableDefault(defaults, v).ToString(), string.Format("tb{0}{1}", v.Id, v.Name), 3, row);
+                    CreateTextBox(GridVariables, FindVariableDefault(defaults, v).ToString(), string.Format("tbvariable{0}{1}", v.Id, v.Name), 3, row);
                 }
                 row++;
             }
@@ -520,6 +526,10 @@ namespace Benutzerverwaltung
                     this.Close();
                     break;
                 case View.VariablePosten:
+                    success = (this.mode == Mode.CreateNew) ? CreateVariable() : ChangeVariable();
+                    if (success.erfolgreich) MessageBox.Show(string.Format("{0} erfolgreich!", success.aktion)); else MessageBox.Show(string.Format("{0} nicht erfolgreich!", success.aktion));
+                    parent.Reload();
+                    this.Close();
                     break;
                 case View.Jubilaeen:
                     success = (this.mode == Mode.CreateNew) ? CreateJub() : ChangeJub();
@@ -532,13 +542,126 @@ namespace Benutzerverwaltung
             }
         }
 
+        private bool ChangeUserVariable(int userid, int variableid, decimal value)
+        {
+            var err = dbc.CommandNonQuery(string.Format(
+                "UPDATE BenutzerVariable SET Wert={0} WHERE BID={1} AND VRPID={2};", 
+                value, userid, variableid));
+            if (err is not null) ErrorLogging.Log(err);
+            else return true;
+            return false;
+        }
+        private bool CreateUserVariable(int userid, int variableid, decimal value)
+        {
+            var query = dbc.CommandQueryToList("SELECT BVID FROM BenutzerVariable;");
+            if (query.error is not null) ErrorLogging.Log(query.error);
+            else if (query.solution is not null && query.solution.Count > 0)
+            {
+                var err = dbc.CommandNonQuery(string.Format(
+                    "INSERT INTO BenutzerVariable (BVID, BID, VRPID, Wert) VALUES((SELECT MAX(BSID) FROM BenutzerStatisch) + 1, {0}, {1}, {2});",
+                    userid, variableid, value));
+                if (err is not null) ErrorLogging.Log(err);
+                else return true;
+            }
+            else
+            {
+                var err = dbc.CommandNonQuery(string.Format(
+                    "INSERT INTO BenutzerVariable (BVID, BID, VRPID, Wert) VALUES(0, {0}, {1}, {2});",
+                    userid, variableid, value));
+                if (err is not null) ErrorLogging.Log(err);
+                else return true;
+            }
+            return false;
+        }
+        private bool ChangeUserStatic(int userid, int staticid, bool value)
+        {
+            var err = dbc.CommandNonQuery(string.Format(
+                "UPDATE BenutzerStatisch SET Aktiv={0} WHERE BID={1} AND SRPID={2};", 
+                value, userid, staticid));
+            if (err is not null) ErrorLogging.Log(err);
+            else return true;
+            return false;
+        }
+        private bool CreateUserStatic(int userid, int staticid, bool value)
+        {
+            var query = dbc.CommandQueryToList("SELECT BSID FROM BenutzerStatisch;");
+            if(query.error is not null) ErrorLogging.Log(query.error);
+            else if(query.solution is not null && query.solution.Count > 0)
+            {
+                var err = dbc.CommandNonQuery(string.Format(
+                    "INSERT INTO BenutzerStatisch (BSID, BID, SRPID, Aktiv) VALUES((SELECT MAX(BSID) FROM BenutzerStatisch) + 1, {0}, {1}, {2});", 
+                    userid, staticid, value));
+                if (err is not null) ErrorLogging.Log(err);
+                else return true;
+            }
+            else
+            {
+                var err = dbc.CommandNonQuery(string.Format(
+                    "INSERT INTO BenutzerStatisch (BSID, BID, SRPID, Aktiv) VALUES(0, {0}, {1}, {2});",
+                    userid, staticid, value));
+                if (err is not null) ErrorLogging.Log(err);
+                else return true;
+            }
+            return false;
+        }
         private (string aktion, bool erfolgreich) ChangeVariable()
         {
-
+            var tbvariablename = SearchTextBoxes("tbvariablename");
+            var tbvariableformel = SearchTextBoxes("tbvariableformel");
+            var tbvariabledefault = SearchTextBoxes("tbvariabledefault");
+            if(tbvariablename is not null && tbvariableformel is not null && tbvariabledefault is not null)
+            {
+                var err = dbc.CommandNonQuery(string.Format(
+                    "UPDATE VariableRechnungsPosten SET Beschreibung='{0}', Formel='{1}', Def={2} WHERE VRPID={3};", 
+                    tbvariablename, tbvariableformel, StringToDecimal(tbvariabledefault), id));
+                if (err is not null) ErrorLogging.Log(err);
+                else return ("Variablen Posten ändern", true);
+            }
+            return ("Variablen Posten ändern", false);
         }
         private (string aktion, bool erfolgreich) CreateVariable()
         {
-
+            var tbvariablename = SearchTextBoxes("tbvariablename");
+            var tbvariableformel = SearchTextBoxes("tbvariableformel");
+            var tbvariabledefault = SearchTextBoxes("tbvariabledefault");
+            if (tbvariablename is not null && tbvariableformel is not null && tbvariabledefault is not null)
+            {
+                var query = dbc.CommandQueryToList("SELECT VRPID FROM VariableRechnungsPosten;");
+                if (query.error is not null) ErrorLogging.Log(query.error);
+                else if (query.solution is not null && query.solution.Count > 0)
+                {
+                    var err = dbc.CommandNonQuery(string.Format(
+                        "INSERT INTO VariableRechnungsPosten (VRPID, Beschreibung, Formel, Def) VALUES((SELECT MAX(VRPID) FROM VariableRechnungsPosten) + 1, '{0}', '{1}', {2});",
+                         tbvariablename, StringToDecimal(tbvariableformel), tbvariabledefault));
+                    if (err is not null) ErrorLogging.Log(err);
+                    else
+                    {
+                        foreach (var u in users)
+                        {
+                            var error = CreateUserVariable(u.Id, id, StringToDecimal(tbvariabledefault));
+                            if (!error) return ("Variablen Posten erstellen", false);
+                        }
+                        return ("Variablen Posten erstellen", true);
+                    }
+                }
+                else
+                {
+                    var err = dbc.CommandNonQuery(string.Format(
+                        "INSERT INTO VariableRechnungsPosten (VRPID, Beschreibung, Formel, Def) VALUES(0, '{0}', '{1}', {2});",
+                         tbvariablename, StringToDecimal(tbvariableformel), tbvariabledefault));
+                    if (err is not null) ErrorLogging.Log(err);
+                    else
+                    {
+                        foreach (var u in users)
+                        {
+                            var error = CreateUserVariable(u.Id, id, StringToDecimal(tbvariabledefault));
+                            if (!error) return ("Variablen Posten erstellen", false);
+                        }
+                        return ("Variablen Posten erstellen", true);
+                    }
+                }
+            }
+            return ("Variablen Posten erstellen", false);
         }
         private (string aktion, bool erfolgreich) ChangeStatic()
         {
@@ -547,7 +670,9 @@ namespace Benutzerverwaltung
             var cbstaticdefault = SearchCheckBoxes("cbstaticdefault");
             if(tbstaticname is not null && tbstaticwert is not null && cbstaticdefault is not null)
             {
-                var err = dbc.CommandNonQuery(string.Format("UPDATE StatischeRechnungsPosten SET Beschreibung='{0}', Wert={1}, Def={2} WHERE SRPID={3};", tbstaticname, StringToDecimal(tbstaticwert), cbstaticdefault, id));
+                var err = dbc.CommandNonQuery(string.Format(
+                    "UPDATE StatischeRechnungsPosten SET Beschreibung='{0}', Wert={1}, Def={2} WHERE SRPID={3};", 
+                    tbstaticname, StringToDecimal(tbstaticwert), cbstaticdefault, id));
                 if (err is not null) ErrorLogging.Log(err);
                 else return ("Statischen Posten ändern", true);
             }
@@ -564,17 +689,35 @@ namespace Benutzerverwaltung
                 if (query.error is not null) ErrorLogging.Log(query.error);
                 else if(query.solution is not null && query.solution.Count > 0) 
                 {
-                    var err = dbc.CommandNonQuery(string.Format("INSERT INTO StatischeRechnungsPosten (SRPID, Beschreibung, Wert, Def) VALUES((SELECT MAX(SRPID) FROM StatischeRechnungsPosten) + 1, '{0}', {1}, {2});",
-                         tbstaticname, StringToDecimal(tbstaticwert), cbstaticdefault));
+                    var err = dbc.CommandNonQuery(string.Format(
+                        "INSERT INTO StatischeRechnungsPosten (SRPID, Beschreibung, Wert, Def) VALUES((SELECT MAX(SRPID) FROM StatischeRechnungsPosten) + 1, '{0}', {1}, {2});",
+                        tbstaticname, StringToDecimal(tbstaticwert), cbstaticdefault));
                     if (err is not null) ErrorLogging.Log(err);
-                    else return ("Statischen Posten erstellen", true);
+                    else
+                    {
+                        foreach(var u in users)
+                        {
+                            var error = CreateUserStatic(u.Id, id, (bool)cbstaticdefault);
+                            if(!error) return ("Statischen Posten erstellen", false);
+                        }
+                        return ("Statischen Posten erstellen", true);
+                    }
                 }
                 else
                 {
-                    var err = dbc.CommandNonQuery(string.Format("INSERT INTO StatischeRechnungsPosten (SRPID, Beschreibung, Wert, Def) VALUES(0, '{0}', {1}, {2});",
-                         tbstaticname, StringToDecimal(tbstaticwert), cbstaticdefault));
+                    var err = dbc.CommandNonQuery(string.Format(
+                        "INSERT INTO StatischeRechnungsPosten (SRPID, Beschreibung, Wert, Def) VALUES(0, '{0}', {1}, {2});",
+                        tbstaticname, StringToDecimal(tbstaticwert), cbstaticdefault));
                     if (err is not null) ErrorLogging.Log(err);
-                    else return ("Statischen Posten erstellen", true);
+                    else
+                    {
+                        foreach (var u in users)
+                        {
+                            var error = CreateUserStatic(u.Id, id, (bool)cbstaticdefault);
+                            if (!error) return ("Statischen Posten erstellen", false);
+                        }
+                        return ("Statischen Posten erstellen", true);
+                    }
                 }
             }
             return ("Statischen Posten erstellen", false);
@@ -583,7 +726,9 @@ namespace Benutzerverwaltung
         {
             var tbjubwert = SearchTextBoxes("tbjubwert");
             if (tbjubwert is not null) {
-                var err = dbc.CommandNonQuery(string.Format("UPDATE Jubilaeum SET Jahre={0} WHERE JID={1};", StringToInt(tbjubwert), id));
+                var err = dbc.CommandNonQuery(string.Format(
+                    "UPDATE Jubilaeum SET Jahre={0} WHERE JID={1};", 
+                    StringToInt(tbjubwert), id));
                 if (err is not null) ErrorLogging.Log(err);
                 else return ("Jubiläum ändern", true);
             }
@@ -613,10 +758,78 @@ namespace Benutzerverwaltung
         }
         private (string aktion, bool erfolgreich) ChangeUser()
         {
+            var tbusername = SearchTextBoxes("tbusername");
+            var tbuservorname = SearchTextBoxes("tbuservorname");
+            var tbuserstrasse = SearchTextBoxes("tbuserstrasse");
+            var tbuserplz = SearchTextBoxes("tbuserplz");
+            var tbuserort = SearchTextBoxes("tbuserort");
+            var tbusergeburtsdatum = SearchTextBoxes("tbusergeburtsdatum");
+            var tbusereintrittsdatum = SearchTextBoxes("tbusereintrittsdatum");
+            if(tbusername != null && tbuservorname != null && tbuserstrasse != null && tbuserplz != null && tbuserort != null && tbusergeburtsdatum != null && tbusereintrittsdatum != null)
+            {
+                var err = dbc.CommandNonQuery(string.Format(
+                    "UPDATE Benutzer SET Name='{0}', Vorname='{1}', Strasse='{2}', PLZ={3}, Ort={4}, Geburtsdatum={5}, Eintrittsdatum={6} WHERE BID={7};",
+                    tbusername, tbuservorname, tbuserstrasse, StringToInt(tbuserplz), tbuserort, StringToDateTime(tbusergeburtsdatum), StringToDateTime(tbusereintrittsdatum), id));
+                if (err is not null) ErrorLogging.Log(err);
+                else
+                {
+                    foreach(var s in statics)
+                    {
+                        var cbstatic = SearchCheckBoxes(string.Format("cbstatic{0}{1}", s.Id, s.Name));
+                        if(cbstatic is not null)
+                        {
+                            var error = ChangeUserStatic(id, s.Id, (bool)cbstatic);
+                            if (!error)
+                            {
+                                return ("Benutzer ändern", false);
+                            }
+                        }
+                        else return ("Benutzer ändern", false);
+                    }
+
+                    foreach(var v in variables)
+                    {
+                        var tbvariable = SearchTextBoxes(string.Format("tbvariable{0}{1}", v.Id, v.Name));
+                        if(tbvariable is not null)
+                        {
+                            var error = ChangeUserVariable(id, v.Id, StringToDecimal(tbvariable));
+                            if (!error)
+                            {
+                                return ("Benutzer ändern", false);
+                            }
+                        }
+                        else return ("Benutzer ändern", false);
+                    }
+
+                    return ("Benutzer ändern", true);
+                }
+            }
             return ("Benutzer ändern", false);
         }
         private (string aktion, bool erfolgreich) CreateUser()
         {
+            var tbusername = SearchTextBoxes("tbusername");
+            var tbuservorname = SearchTextBoxes("tbuservorname");
+            var tbuserstrasse = SearchTextBoxes("tbuserstrasse");
+            var tbuserplz = SearchTextBoxes("tbuserplz");
+            var tbuserort = SearchTextBoxes("tbuserort");
+            var tbusergeburtsdatum = SearchTextBoxes("tbusergeburtsdatum");
+            var tbusereintrittsdatum = SearchTextBoxes("tbusereintrittsdatum");
+            if (tbusername != null && tbuservorname != null && tbuserstrasse != null && tbuserplz != null && tbuserort != null && tbusergeburtsdatum != null && tbusereintrittsdatum != null)
+            {
+                var query = dbc.CommandQueryToList("SELECT BID FROM Benutzer;");
+                if (query.error is not null) ErrorLogging.Log(query.error);
+                else if (query.solution is not null && query.solution.Count > 0)
+                {
+                    var err = dbc.CommandNonQuery(string.Format(
+                        ";",
+                        ));
+                }
+                else
+                {
+
+                }
+            }
             return ("Benutzer erstellen", false);
         }
     }
