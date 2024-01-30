@@ -55,9 +55,17 @@ namespace Benutzerverwaltung
             CreateControls();
         }
 
-        private static DateTime StringToDateTime(string input)
+        private static DataBaseConnection.Date StringToDate(string input)
         {
-            return DateTime.Parse(input);
+            try
+            {
+                return new DataBaseConnection.Date(input);
+            }
+            catch (Exception e)
+            {
+                ErrorLogging.Log(e.ToString());
+                return new DataBaseConnection.Date() { day = 1, month = 1, year = 7777 };
+            }
         }
         private static decimal StringToDecimal(string input)
         {
@@ -90,7 +98,7 @@ namespace Benutzerverwaltung
             foreach(var c in input) if(IsNumeric(c)) output += c;
             return int.Parse(output);
         }
-        private static bool IsNumeric(char input)
+        public static bool IsNumeric(char input)
         {
             if (input == '0' || input == '1' || input == '2' || input == '3' || input == '4' || input == '5' || input == '6' || input == '7' || input == '8' || input == '9') return true; else return false;
         }
@@ -196,7 +204,7 @@ namespace Benutzerverwaltung
 
             CreateTextBlock(ControlsGrid, "Name", 0, 0);
             CreateTextBlock(ControlsGrid, "Wert", 0, 1);
-            CreateTextBlock(ControlsGrid, "Wert standartmäßig aktiviert?", 0, 2);
+            CreateTextBlock(ControlsGrid, "Standartmäßig aktiviert?", 0, 2);
 
             if(s is null)
             {
@@ -272,7 +280,7 @@ namespace Benutzerverwaltung
 
             CreateTextBlock(ControlsGrid, "Name", 0, 0); CreateTextBlock(ControlsGrid, "Vorname", 0, 1); CreateTextBlock(ControlsGrid, "Strasse", 0, 2); 
             CreateTextBlock(ControlsGrid, "PLZ", 0, 3); CreateTextBlock(ControlsGrid, "Ort", 0, 4);
-            CreateTextBlock(ControlsGrid, "Geburtsdatum (YYYYMMDD)", 0, 5); CreateTextBlock(ControlsGrid, "Eintrittsdatum (YYYYMMDD)", 0, 6); 
+            CreateTextBlock(ControlsGrid, "Geburtsdatum", 0, 5, "DatumFormat (DD.MM.YYYY oder YYYY.MM.DD)"); CreateTextBlock(ControlsGrid, "Eintrittsdatum", 0, 6, "DatumFormat (DD.MM.YYYY oder YYYY.MM.DD)"); 
             CreateTextBlock(ControlsGrid, "Statische Posten", 0, 7); CreateTextBlock(ControlsGrid, "Variable Posten", 0, 8); CreateButton("Annehmen", 0, 9);
             if(user is null)
             {
@@ -296,8 +304,8 @@ namespace Benutzerverwaltung
                 CreateTextBox(ControlsGrid, user.Strasse, "tbuserstrasse", 1, 2);
                 CreateTextBox(ControlsGrid, user.PLZ.ToString(), "tbuserplz", 1, 3);
                 CreateTextBox(ControlsGrid, user.Ort, "tbuserort", 1, 4);
-                CreateTextBox(ControlsGrid, user.Geburtstag.Date.ToString(), "tbusergeburtsdatum", 1, 5);
-                CreateTextBox(ControlsGrid, user.Eintrittsdatum.Date.ToString(), "tbusereintrittsdatum", 1, 6);
+                CreateTextBox(ControlsGrid, user.Geburtstag.ToString(), "tbusergeburtsdatum", 1, 5);
+                CreateTextBox(ControlsGrid, user.Eintrittsdatum.ToString(), "tbusereintrittsdatum", 1, 6);
                 CreateSubGrid(GridStatics, 1, 7);
                 CCBenutzerStatics(user.statics);
                 CreateSubGrid(GridVariables, 1, 8);
@@ -363,7 +371,7 @@ namespace Benutzerverwaltung
                 CreateTextBlock(GridVariables, v.Formel, 2, row);
                 if(defaults is null)
                 {
-                    CreateTextBox(GridVariables, 0.ToString(), string.Format("tbvariable{0}{1}", v.Id, v.Name), 3, row);
+                    CreateTextBox(GridVariables, v.Default.ToString(), string.Format("tbvariable{0}{1}", v.Id, v.Name), 3, row);
                 }
                 else
                 {
@@ -422,12 +430,13 @@ namespace Benutzerverwaltung
             Grid.SetRow(bd, row);
             ControlsGrid.Children.Add(bd);
         }
-        private void CreateTextBlock(Grid grid, string text, int column, int row)
+        private void CreateTextBlock(Grid grid, string text, int column, int row, string? tooltip = null)
         {
             TextBlock tb = new TextBlock()
             {
                 Margin = new Thickness(5),
-                Text = text
+                Text = text,
+                ToolTip = tooltip
             };
             Border bd = new Border()
             {
@@ -518,26 +527,39 @@ namespace Benutzerverwaltung
             switch (this.view)
             {
                 case View.Benutzer:
+                    success = (this.mode == Mode.CreateNew) ? CreateUser() : ChangeUser();
+                    if (success.erfolgreich) MessageBox.Show(string.Format("{0} erfolgreich!", success.aktion), success.aktion, MessageBoxButton.OK, MessageBoxImage.Exclamation); 
+                    else MessageBox.Show(string.Format("{0} nicht erfolgreich!", success.aktion), success.aktion, MessageBoxButton.OK, MessageBoxImage.Error);
+                    parent.Reload();
+                    this.Close();
                     break;
                 case View.StatischePosten:
                     success = (this.mode == Mode.CreateNew) ? CreateStatic() : ChangeStatic();
-                    if (success.erfolgreich) MessageBox.Show(string.Format("{0} erfolgreich!", success.aktion)); else MessageBox.Show(string.Format("{0} nicht erfolgreich!", success.aktion));
+                    if (success.erfolgreich) MessageBox.Show(string.Format("{0} erfolgreich!", success.aktion), success.aktion, MessageBoxButton.OK, MessageBoxImage.Exclamation); 
+                    else MessageBox.Show(string.Format("{0} nicht erfolgreich!", success.aktion), success.aktion, MessageBoxButton.OK, MessageBoxImage.Error);
                     parent.Reload();
                     this.Close();
                     break;
                 case View.VariablePosten:
                     success = (this.mode == Mode.CreateNew) ? CreateVariable() : ChangeVariable();
-                    if (success.erfolgreich) MessageBox.Show(string.Format("{0} erfolgreich!", success.aktion)); else MessageBox.Show(string.Format("{0} nicht erfolgreich!", success.aktion));
+                    if (success.erfolgreich) MessageBox.Show(string.Format("{0} erfolgreich!", success.aktion), success.aktion, MessageBoxButton.OK, MessageBoxImage.Exclamation); 
+                    else MessageBox.Show(string.Format("{0} nicht erfolgreich!", success.aktion), success.aktion, MessageBoxButton.OK, MessageBoxImage.Error);
                     parent.Reload();
                     this.Close();
                     break;
                 case View.Jubilaeen:
                     success = (this.mode == Mode.CreateNew) ? CreateJub() : ChangeJub();
-                    if (success.erfolgreich) MessageBox.Show(string.Format("{0} erfolgreich!", success.aktion)); else MessageBox.Show(string.Format("{0} nicht erfolgreich!", success.aktion));
+                    if (success.erfolgreich) MessageBox.Show(string.Format("{0} erfolgreich!", success.aktion), success.aktion, MessageBoxButton.OK, MessageBoxImage.Exclamation); 
+                    else MessageBox.Show(string.Format("{0} nicht erfolgreich!", success.aktion), success.aktion, MessageBoxButton.OK, MessageBoxImage.Error);
                     parent.Reload();
                     this.Close();
                     break;
                 case View.GesamtAktuell:
+                    success = (this.mode == Mode.CreateNew) ? CreateUser() : ChangeUser();
+                    if (success.erfolgreich) MessageBox.Show(string.Format("{0} erfolgreich!", success.aktion), success.aktion, MessageBoxButton.OK, MessageBoxImage.Exclamation); 
+                    else MessageBox.Show(string.Format("{0} nicht erfolgreich!", success.aktion), success.aktion, MessageBoxButton.OK, MessageBoxImage.Error);
+                    parent.Reload();
+                    this.Close();
                     break;
             }
         }
@@ -743,13 +765,17 @@ namespace Benutzerverwaltung
                 if (query.error is not null) ErrorLogging.Log(query.error);
                 else if (query.solution is not null && query.solution.Count > 0)
                 {
-                    var err = dbc.CommandNonQuery(string.Format("INSERT INTO Jubilaeum (JID, Jahre) VALUES((SELECT MAX(JID) FROM Jubilaeum) + 1, {0});", tbjubwert));
+                    var err = dbc.CommandNonQuery(string.Format(
+                        "INSERT INTO Jubilaeum (JID, Jahre) VALUES((SELECT MAX(JID) FROM Jubilaeum) + 1, {0});", 
+                        tbjubwert));
                     if (err is not null) ErrorLogging.Log(err);
                     else return ("Jubiläum erstellen", true);
                 }
                 else
                 {
-                    var err = dbc.CommandNonQuery(string.Format("INSERT INTO Jubilaeum (JID, Jahre) VALUES(0, {0});", tbjubwert));
+                    var err = dbc.CommandNonQuery(string.Format(
+                        "INSERT INTO Jubilaeum (JID, Jahre) VALUES(0, {0});", 
+                        tbjubwert));
                     if (err is not null) ErrorLogging.Log(err);
                     else return ("Jubiläum erstellen", true);
                 }
@@ -767,9 +793,20 @@ namespace Benutzerverwaltung
             var tbusereintrittsdatum = SearchTextBoxes("tbusereintrittsdatum");
             if(tbusername != null && tbuservorname != null && tbuserstrasse != null && tbuserplz != null && tbuserort != null && tbusergeburtsdatum != null && tbusereintrittsdatum != null)
             {
+                try
+                {
+                    DataBaseConnection.Date gd = new DataBaseConnection.Date(tbusergeburtsdatum);
+                    DataBaseConnection.Date ed = new DataBaseConnection.Date(tbusereintrittsdatum);
+                }
+                catch (Exception ex)
+                {
+                    ErrorLogging.Log(ex.ToString());
+                    MessageBox.Show("Falsche Eingabe in Datumfeld. Formate (DD.MM.YYYY oder YYYY.MM.DD)");
+                    return ("Benutzer ändern", false);
+                }
                 var err = dbc.CommandNonQuery(string.Format(
-                    "UPDATE Benutzer SET Name='{0}', Vorname='{1}', Strasse='{2}', PLZ={3}, Ort={4}, Geburtsdatum={5}, Eintrittsdatum={6} WHERE BID={7};",
-                    tbusername, tbuservorname, tbuserstrasse, StringToInt(tbuserplz), tbuserort, StringToDateTime(tbusergeburtsdatum), StringToDateTime(tbusereintrittsdatum), id));
+                    "UPDATE Benutzer SET Name='{0}', Vorname='{1}', Strasse='{2}', PLZ={3}, Ort='{4}', Geburtsdatum='{5}', Eintrittsdatum='{6}' WHERE BID={7};",
+                    tbusername, tbuservorname, tbuserstrasse, StringToInt(tbuserplz), tbuserort, StringToDate(tbusergeburtsdatum).ToString(), StringToDate(tbusereintrittsdatum).ToString(), id));
                 if (err is not null) ErrorLogging.Log(err);
                 else
                 {
@@ -817,17 +854,96 @@ namespace Benutzerverwaltung
             var tbusereintrittsdatum = SearchTextBoxes("tbusereintrittsdatum");
             if (tbusername != null && tbuservorname != null && tbuserstrasse != null && tbuserplz != null && tbuserort != null && tbusergeburtsdatum != null && tbusereintrittsdatum != null)
             {
+                try
+                {
+                    DataBaseConnection.Date gd = new DataBaseConnection.Date(tbusergeburtsdatum);
+                    DataBaseConnection.Date ed = new DataBaseConnection.Date(tbusereintrittsdatum);
+                }
+                catch (Exception ex)
+                {
+                    ErrorLogging.Log(ex.ToString());
+                    MessageBox.Show("Falsche Eingabe in Datumfeld. Formate (DD.MM.YYYY oder YYYY.MM.DD)");
+                    return ("Benutzer erstellen", false);
+                }
                 var query = dbc.CommandQueryToList("SELECT BID FROM Benutzer;");
                 if (query.error is not null) ErrorLogging.Log(query.error);
                 else if (query.solution is not null && query.solution.Count > 0)
                 {
                     var err = dbc.CommandNonQuery(string.Format(
-                        ";",
-                        ));
+                        "INSERT INTO Benutzer (BID, Name, Vorname, Strasse, PLZ, Ort, Geburtsdatum, Eintrittsdatum) VALUES((SELECT MAX(BID) FROM Benutzer) + 1, '{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}');",
+                        tbusername, tbuservorname, tbuserstrasse, StringToInt(tbuserplz), tbuserort, StringToDate(tbusergeburtsdatum).ToString(), StringToDate(tbusereintrittsdatum).ToString()));
+                    if (err is not null) ErrorLogging.Log(err);
+                    else
+                    {
+                        foreach (var s in statics)
+                        {
+                            var cbstatic = SearchCheckBoxes(string.Format("cbstatic{0}{1}", s.Id, s.Name));
+                            if (cbstatic is not null)
+                            {
+                                var error = CreateUserStatic(id, s.Id, (bool)cbstatic);
+                                if (!error)
+                                {
+                                    return ("Benutzer erstellen", false);
+                                }
+                            }
+                            else return ("Benutzer erstellen", false);
+                        }
+
+                        foreach (var v in variables)
+                        {
+                            var tbvariable = SearchTextBoxes(string.Format("tbvariable{0}{1}", v.Id, v.Name));
+                            if (tbvariable is not null)
+                            {
+                                var error = CreateUserVariable(id, v.Id, StringToDecimal(tbvariable));
+                                if (!error)
+                                {
+                                    return ("Benutzer erstellen", false);
+                                }
+                            }
+                            else return ("Benutzer erstellen", false);
+                        }
+
+                        return ("Benutzer erstellen", true);
+                    }
                 }
                 else
                 {
+                    var err = dbc.CommandNonQuery(string.Format(
+                        "INSERT INTO Benutzer (BID, Name, Vorname, Strasse, PLZ, Ort, Geburtsdatum, Eintrittsdatum) VALUES(0, '{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}');",
+                        tbusername, tbuservorname, tbuserstrasse, StringToInt(tbuserplz), tbuserort, StringToDate(tbusergeburtsdatum).ToString(), StringToDate(tbusereintrittsdatum).ToString()));
+                    if (err is not null) ErrorLogging.Log(err);
+                    else
+                    {
+                        foreach (var s in statics)
+                        {
+                            var cbstatic = SearchCheckBoxes(string.Format("cbstatic{0}{1}", s.Id, s.Name));
+                            if (cbstatic is not null)
+                            {
+                                var error = CreateUserStatic(id, s.Id, (bool)cbstatic);
+                                if (!error)
+                                {
+                                    return ("Benutzer erstellen", false);
+                                }
+                            }
+                            else return ("Benutzer erstellen", false);
+                        }
 
+                        foreach (var v in variables)
+                        {
+                            var tbvariable = SearchTextBoxes(string.Format("tbvariable{0}{1}", v.Id, v.Name));
+                            if (tbvariable is not null)
+                            {
+                                var error = CreateUserVariable(id, v.Id, StringToDecimal(tbvariable));
+                                if (!error)
+                                {
+                                    return ("Benutzer erstellen", false);
+                                }
+                            }
+                            else return ("Benutzer erstellen", false);
+                        }
+
+                        return ("Benutzer erstellen", true);
+                    }
                 }
             }
             return ("Benutzer erstellen", false);

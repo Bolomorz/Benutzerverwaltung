@@ -12,7 +12,7 @@ namespace Benutzerverwaltung
         public static void Log(string message)
         {
             DateTime now = DateTime.Now;
-            List<string> errors = new List<string>() { string.Format("{0}: {1}", now, message)};
+            List<string> errors = new List<string>() { string.Format("{0}:\n {1}", now, message), "----------", "", "----------"};
             File.AppendAllLines("errorlog.txt", errors);
         }
     }

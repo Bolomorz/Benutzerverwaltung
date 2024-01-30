@@ -18,12 +18,12 @@ namespace Benutzerverwaltung
         public string Strasse;
         public int PLZ;
         public string Ort;
-        public DateTime Geburtstag;
-        public DateTime Eintrittsdatum;
+        public DataBaseConnection.Date Geburtstag;
+        public DataBaseConnection.Date Eintrittsdatum;
         public List<(Static s, bool b)> statics;
         public List<(Variable v, decimal w)> variables;
 
-        public User(int id, string name, string vorname, string strasse, int plz, string ort, DateTime geburtstag, DateTime eintrittsdatum) 
+        public User(int id, string name, string vorname, string strasse, int plz, string ort, DataBaseConnection.Date geburtstag, DataBaseConnection.Date eintrittsdatum) 
         {
             this.Id = id;
             this.Name = name;

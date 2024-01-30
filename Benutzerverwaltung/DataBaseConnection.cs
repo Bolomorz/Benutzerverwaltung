@@ -27,6 +27,54 @@ namespace Benutzerverwaltung
             public List<List<object>>? solution;
         }
 
+        public struct Date
+        {
+            public int day;
+            public int month;
+            public int year;
+
+            public Date(string date)
+            {
+                //0123-56-89
+                //01-34-6789
+                if (date.Length != 10) throw new Exception(string.Format("cannot convert string {0} to date!", date));
+                if (!ConfigWindow.IsNumeric(date[4]) && !ConfigWindow.IsNumeric(date[7])
+                    && ConfigWindow.IsNumeric(date[0]) && ConfigWindow.IsNumeric(date[1]) && ConfigWindow.IsNumeric(date[2]) && ConfigWindow.IsNumeric(date[3])
+                    && ConfigWindow.IsNumeric(date[5]) && ConfigWindow.IsNumeric(date[6]) && ConfigWindow.IsNumeric(date[8]) && ConfigWindow.IsNumeric(date[9]))
+                {
+                    string y = date[0].ToString() + date[1].ToString() + date[2].ToString() + date[3].ToString();
+                    string m = date[5].ToString() + date[6].ToString();
+                    string d = date[8].ToString() + date[9].ToString();
+                    year = Convert.ToInt32(y);
+                    month = Convert.ToInt32(m);
+                    day = Convert.ToInt32(d);
+                }
+                else if(!ConfigWindow.IsNumeric(date[2]) && !ConfigWindow.IsNumeric(date[5])
+                    && ConfigWindow.IsNumeric(date[0]) && ConfigWindow.IsNumeric(date[1]) && ConfigWindow.IsNumeric(date[3]) && ConfigWindow.IsNumeric(date[4])
+                    && ConfigWindow.IsNumeric(date[6]) && ConfigWindow.IsNumeric(date[7]) && ConfigWindow.IsNumeric(date[8]) && ConfigWindow.IsNumeric(date[9]))
+                {
+                    string y = date[6].ToString() + date[7].ToString() + date[8].ToString() + date[9].ToString();
+                    string m = date[3].ToString() + date[4].ToString();
+                    string d = date[0].ToString() + date[1].ToString();
+                    year = Convert.ToInt32(y);
+                    month = Convert.ToInt32(m);
+                    day = Convert.ToInt32(d);
+                }
+                else
+                {
+                    throw new Exception(string.Format("cannot convert string {0} to date!", date));
+                }
+            }
+
+            public override string ToString()
+            {
+                string y = year.ToString().PadLeft(4, '0');
+                string m = month.ToString().PadLeft(2, '0');
+                string d = day.ToString().PadLeft(2, '0');
+                return string.Format("{0}.{1}.{2}", d, m, y);
+            }
+        }
+
         public DataBaseConnection() 
         {
             CreateDatabase();
@@ -49,8 +97,8 @@ namespace Benutzerverwaltung
                                     Strasse varchar(255) NOT NULL,
                                     PLZ int NOT NULL,
                                     Ort varchar(255) NOT NULL,
-                                    Geburtsdatum datetime NOT NULL,
-                                    Eintrittsdatum datetime NOT NULL);",
+                                    Geburtsdatum varchar(10) NOT NULL,
+                                    Eintrittsdatum varchar(10) NOT NULL);",
 
                     @"CREATE TABLE IF NOT EXISTS StatischeRechnungsPosten(
                                     SRPID int PRIMARY KEY NOT NULL,
