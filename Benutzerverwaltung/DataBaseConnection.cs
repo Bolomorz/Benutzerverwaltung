@@ -66,6 +66,13 @@ namespace Benutzerverwaltung
                 }
             }
 
+            public Date(DateTime date)
+            {
+                year = date.Year;
+                month = date.Month;
+                day = date.Day;
+            }
+
             public override string ToString()
             {
                 string y = year.ToString().PadLeft(4, '0');
