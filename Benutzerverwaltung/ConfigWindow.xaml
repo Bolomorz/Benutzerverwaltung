@@ -5,8 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Benutzerverwaltung"
         mc:Ignorable="d"
-        Title="ConfigWindow" Height="900" Width="800">
-    <Grid>
+        Title="ConfigWindow" Height="850" Width="800">
+    <Grid Background="Azure">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="18*"/>
@@ -17,10 +17,10 @@
             <RowDefinition Height="18*"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Margin="5" Grid.Column="1" Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Center">
+        <Border BorderThickness="1" BorderBrush="Black" Background="LightSlateGray" Margin="5" Grid.Column="1" Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Center">
             <TextBlock x:Name="TBView" Margin="5"/>
         </Border>
-        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Margin="5" Grid.Column="1" Grid.Row="1">
+        <Border BorderThickness="1" BorderBrush="Black" Background="LightSlateGray" Margin="5" Grid.Column="1" Grid.Row="1">
             <Grid x:Name="ControlsGrid" Margin="5">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -28,7 +28,7 @@
                 </Grid.ColumnDefinitions>
             </Grid>
         </Border>
-        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Margin="5" Grid.Column="1" Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Center">
+        <Border BorderThickness="1" BorderBrush="Black" Background="LightSlateGray" Margin="5" Grid.Column="1" Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Center">
             <Button Margin="5" Click="ClickCancel">Abbrechen</Button> 
         </Border>
     </Grid>

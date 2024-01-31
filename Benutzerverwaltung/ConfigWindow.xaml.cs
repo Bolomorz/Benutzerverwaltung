@@ -64,7 +64,7 @@ namespace Benutzerverwaltung
             catch (Exception e)
             {
                 ErrorLogging.Log(e.ToString());
-                return new DataBaseConnection.Date() { day = 1, month = 1, year = 7777 };
+                return new DataBaseConnection.Date() { day = 77, month = 77, year = 7777 };
             }
         }
         private static decimal StringToDecimal(string input)
@@ -398,7 +398,7 @@ namespace Benutzerverwaltung
             {
                 BorderThickness = new Thickness(1),
                 BorderBrush = Brushes.Black,
-                Background = Brushes.Gainsboro,
+                Background = Brushes.LightSlateGray,
                 Margin = new Thickness(5),
                 Child = sv
             };
@@ -633,11 +633,18 @@ namespace Benutzerverwaltung
             var tbvariabledefault = SearchTextBoxes("tbvariabledefault");
             if(tbvariablename is not null && tbvariableformel is not null && tbvariabledefault is not null)
             {
+                dbc.CommandNonQuery("BEGIN;");
                 var err = dbc.CommandNonQuery(string.Format(
                     "UPDATE VariableRechnungsPosten SET Beschreibung='{0}', Formel='{1}', Def={2} WHERE VRPID={3};", 
                     tbvariablename, tbvariableformel, StringToDecimal(tbvariabledefault), id));
-                if (err is not null) ErrorLogging.Log(err);
-                else return ("Variablen Posten ändern", true);
+                if (err is not null)
+                {
+                    dbc.CommandNonQuery("ROLLBACK;"); ErrorLogging.Log(err);
+                }
+                else
+                {
+                    dbc.CommandNonQuery("COMMIT;"); return ("Variablen Posten ändern", true);
+                }
             }
             return ("Variablen Posten ändern", false);
         }
@@ -652,33 +659,49 @@ namespace Benutzerverwaltung
                 if (query.error is not null) ErrorLogging.Log(query.error);
                 else if (query.solution is not null && query.solution.Count > 0)
                 {
+                    dbc.CommandNonQuery("BEGIN;");
                     var err = dbc.CommandNonQuery(string.Format(
                         "INSERT INTO VariableRechnungsPosten (VRPID, Beschreibung, Formel, Def) VALUES((SELECT MAX(VRPID) FROM VariableRechnungsPosten) + 1, '{0}', '{1}', {2});",
                          tbvariablename, StringToDecimal(tbvariableformel), tbvariabledefault));
-                    if (err is not null) ErrorLogging.Log(err);
+                    if (err is not null)
+                    {
+                        dbc.CommandNonQuery("ROLLBACK;"); ErrorLogging.Log(err);
+                    }
                     else
                     {
                         foreach (var u in users)
                         {
                             var error = CreateUserVariable(u.Id, id, StringToDecimal(tbvariabledefault));
-                            if (!error) return ("Variablen Posten erstellen", false);
+                            if (!error)
+                            {
+                                dbc.CommandNonQuery("ROLLBACK;"); return ("Variablen Posten erstellen", false);
+                            }
                         }
+                        dbc.CommandNonQuery("COMMIT;");
                         return ("Variablen Posten erstellen", true);
                     }
                 }
                 else
                 {
+                    dbc.CommandNonQuery("BEGIN;");
                     var err = dbc.CommandNonQuery(string.Format(
                         "INSERT INTO VariableRechnungsPosten (VRPID, Beschreibung, Formel, Def) VALUES(0, '{0}', '{1}', {2});",
                          tbvariablename, StringToDecimal(tbvariableformel), tbvariabledefault));
-                    if (err is not null) ErrorLogging.Log(err);
+                    if (err is not null)
+                    {
+                        dbc.CommandNonQuery("ROLLBACK;"); ErrorLogging.Log(err);
+                    }
                     else
                     {
                         foreach (var u in users)
                         {
                             var error = CreateUserVariable(u.Id, id, StringToDecimal(tbvariabledefault));
-                            if (!error) return ("Variablen Posten erstellen", false);
+                            if (!error)
+                            {
+                                dbc.CommandNonQuery("ROLLBACK;"); return ("Variablen Posten erstellen", false);
+                            }
                         }
+                        dbc.CommandNonQuery("COMMIT;");
                         return ("Variablen Posten erstellen", true);
                     }
                 }
@@ -692,11 +715,18 @@ namespace Benutzerverwaltung
             var cbstaticdefault = SearchCheckBoxes("cbstaticdefault");
             if(tbstaticname is not null && tbstaticwert is not null && cbstaticdefault is not null)
             {
+                dbc.CommandNonQuery("BEGIN;");
                 var err = dbc.CommandNonQuery(string.Format(
                     "UPDATE StatischeRechnungsPosten SET Beschreibung='{0}', Wert={1}, Def={2} WHERE SRPID={3};", 
                     tbstaticname, StringToDecimal(tbstaticwert), cbstaticdefault, id));
-                if (err is not null) ErrorLogging.Log(err);
-                else return ("Statischen Posten ändern", true);
+                if (err is not null)
+                {
+                    dbc.CommandNonQuery("ROLLBACK;"); ErrorLogging.Log(err);
+                }
+                else
+                {
+                    dbc.CommandNonQuery("COMMIT;"); return ("Statischen Posten ändern", true);
+                }
             }
             return ("Statischen Posten ändern", false);
         }
@@ -711,33 +741,49 @@ namespace Benutzerverwaltung
                 if (query.error is not null) ErrorLogging.Log(query.error);
                 else if(query.solution is not null && query.solution.Count > 0) 
                 {
+                    dbc.CommandNonQuery("BEGIN;");
                     var err = dbc.CommandNonQuery(string.Format(
                         "INSERT INTO StatischeRechnungsPosten (SRPID, Beschreibung, Wert, Def) VALUES((SELECT MAX(SRPID) FROM StatischeRechnungsPosten) + 1, '{0}', {1}, {2});",
                         tbstaticname, StringToDecimal(tbstaticwert), cbstaticdefault));
-                    if (err is not null) ErrorLogging.Log(err);
-                    else
+                    if (err is not null)
                     {
-                        foreach(var u in users)
-                        {
-                            var error = CreateUserStatic(u.Id, id, (bool)cbstaticdefault);
-                            if(!error) return ("Statischen Posten erstellen", false);
-                        }
-                        return ("Statischen Posten erstellen", true);
+                        dbc.CommandNonQuery("ROLLBACK;"); ErrorLogging.Log(err);
                     }
-                }
-                else
-                {
-                    var err = dbc.CommandNonQuery(string.Format(
-                        "INSERT INTO StatischeRechnungsPosten (SRPID, Beschreibung, Wert, Def) VALUES(0, '{0}', {1}, {2});",
-                        tbstaticname, StringToDecimal(tbstaticwert), cbstaticdefault));
-                    if (err is not null) ErrorLogging.Log(err);
                     else
                     {
                         foreach (var u in users)
                         {
                             var error = CreateUserStatic(u.Id, id, (bool)cbstaticdefault);
-                            if (!error) return ("Statischen Posten erstellen", false);
+                            if (!error)
+                            {
+                                dbc.CommandNonQuery("ROLLBACK;"); return ("Statischen Posten erstellen", false);
+                            }
                         }
+                        dbc.CommandNonQuery("COMMIT;");
+                        return ("Statischen Posten erstellen", true);
+                    }
+                }
+                else
+                {
+                    dbc.CommandNonQuery("BEGIN;");
+                    var err = dbc.CommandNonQuery(string.Format(
+                        "INSERT INTO StatischeRechnungsPosten (SRPID, Beschreibung, Wert, Def) VALUES(0, '{0}', {1}, {2});",
+                        tbstaticname, StringToDecimal(tbstaticwert), cbstaticdefault));
+                    if (err is not null)
+                    {
+                        dbc.CommandNonQuery("ROLLBACK;"); ErrorLogging.Log(err);
+                    }
+                    else
+                    {
+                        foreach (var u in users)
+                        {
+                            var error = CreateUserStatic(u.Id, id, (bool)cbstaticdefault);
+                            if (!error)
+                            {
+                                dbc.CommandNonQuery("ROLLBACK;"); return ("Statischen Posten erstellen", false);
+                            }
+                        }
+                        dbc.CommandNonQuery("COMMIT;");
                         return ("Statischen Posten erstellen", true);
                     }
                 }
@@ -748,11 +794,18 @@ namespace Benutzerverwaltung
         {
             var tbjubwert = SearchTextBoxes("tbjubwert");
             if (tbjubwert is not null) {
+                dbc.CommandNonQuery("BEGIN;");
                 var err = dbc.CommandNonQuery(string.Format(
                     "UPDATE Jubilaeum SET Jahre={0} WHERE JID={1};", 
                     StringToInt(tbjubwert), id));
-                if (err is not null) ErrorLogging.Log(err);
-                else return ("Jubiläum ändern", true);
+                if (err is not null)
+                {
+                    dbc.CommandNonQuery("ROLLBACK;"); ErrorLogging.Log(err);
+                }
+                else
+                {
+                    dbc.CommandNonQuery("COMMIT;"); return ("Jubiläum ändern", true);
+                }
             }
             return ("Jubiläum ändern", false);
         }
@@ -765,19 +818,33 @@ namespace Benutzerverwaltung
                 if (query.error is not null) ErrorLogging.Log(query.error);
                 else if (query.solution is not null && query.solution.Count > 0)
                 {
+                    dbc.CommandNonQuery("BEGIN;");
                     var err = dbc.CommandNonQuery(string.Format(
                         "INSERT INTO Jubilaeum (JID, Jahre) VALUES((SELECT MAX(JID) FROM Jubilaeum) + 1, {0});", 
                         tbjubwert));
-                    if (err is not null) ErrorLogging.Log(err);
-                    else return ("Jubiläum erstellen", true);
+                    if (err is not null)
+                    {
+                        dbc.CommandNonQuery("ROLLBACK;"); ErrorLogging.Log(err);
+                    }
+                    else
+                    {
+                        dbc.CommandNonQuery("COMMIT;"); return ("Jubiläum erstellen", true);
+                    }
                 }
                 else
                 {
+                    dbc.CommandNonQuery("BEGIN;");
                     var err = dbc.CommandNonQuery(string.Format(
                         "INSERT INTO Jubilaeum (JID, Jahre) VALUES(0, {0});", 
                         tbjubwert));
-                    if (err is not null) ErrorLogging.Log(err);
-                    else return ("Jubiläum erstellen", true);
+                    if (err is not null)
+                    {
+                        dbc.CommandNonQuery("ROLLBACK;"); ErrorLogging.Log(err);
+                    }
+                    else
+                    {
+                        dbc.CommandNonQuery("COMMIT;"); return ("Jubiläum erstellen", true);
+                    }
                 }
             }
             return ("Jubiläum erstellen", false);
@@ -804,6 +871,7 @@ namespace Benutzerverwaltung
                     MessageBox.Show("Falsche Eingabe in Datumfeld. Formate (DD.MM.YYYY oder YYYY.MM.DD)");
                     return ("Benutzer ändern", false);
                 }
+                dbc.CommandNonQuery("BEGIN;");
                 var err = dbc.CommandNonQuery(string.Format(
                     "UPDATE Benutzer SET Name='{0}', Vorname='{1}', Strasse='{2}', PLZ={3}, Ort='{4}', Geburtsdatum='{5}', Eintrittsdatum='{6}' WHERE BID={7};",
                     tbusername, tbuservorname, tbuserstrasse, StringToInt(tbuserplz), tbuserort, StringToDate(tbusergeburtsdatum).ToString(), StringToDate(tbusereintrittsdatum).ToString(), id));
@@ -813,31 +881,36 @@ namespace Benutzerverwaltung
                     foreach(var s in statics)
                     {
                         var cbstatic = SearchCheckBoxes(string.Format("cbstatic{0}{1}", s.Id, s.Name));
-                        if(cbstatic is not null)
+                        if (cbstatic is not null)
                         {
                             var error = ChangeUserStatic(id, s.Id, (bool)cbstatic);
                             if (!error)
                             {
+                                dbc.CommandNonQuery("ROLLBACK;");
                                 return ("Benutzer ändern", false);
                             }
                         }
-                        else return ("Benutzer ändern", false);
-                    }
+                        else { dbc.CommandNonQuery("ROLLBACK;"); return ("Benutzer ändern", false);}
+                        }
 
                     foreach(var v in variables)
                     {
                         var tbvariable = SearchTextBoxes(string.Format("tbvariable{0}{1}", v.Id, v.Name));
-                        if(tbvariable is not null)
+                        if (tbvariable is not null)
                         {
                             var error = ChangeUserVariable(id, v.Id, StringToDecimal(tbvariable));
                             if (!error)
                             {
+                                dbc.CommandNonQuery("ROLLBACK;");
                                 return ("Benutzer ändern", false);
                             }
                         }
-                        else return ("Benutzer ändern", false);
+                        else
+                        {
+                            dbc.CommandNonQuery("ROLLBACK;"); return ("Benutzer ändern", false);
+                        }
                     }
-
+                    dbc.CommandNonQuery("COMMIT;");
                     return ("Benutzer ändern", true);
                 }
             }
@@ -869,6 +942,7 @@ namespace Benutzerverwaltung
                 if (query.error is not null) ErrorLogging.Log(query.error);
                 else if (query.solution is not null && query.solution.Count > 0)
                 {
+                    dbc.CommandNonQuery("BEGIN;");
                     var err = dbc.CommandNonQuery(string.Format(
                         "INSERT INTO Benutzer (BID, Name, Vorname, Strasse, PLZ, Ort, Geburtsdatum, Eintrittsdatum) VALUES((SELECT MAX(BID) FROM Benutzer) + 1, '{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}');",
                         tbusername, tbuservorname, tbuserstrasse, StringToInt(tbuserplz), tbuserort, StringToDate(tbusergeburtsdatum).ToString(), StringToDate(tbusereintrittsdatum).ToString()));
@@ -883,10 +957,14 @@ namespace Benutzerverwaltung
                                 var error = CreateUserStatic(id, s.Id, (bool)cbstatic);
                                 if (!error)
                                 {
+                                    dbc.CommandNonQuery("ROLLBACK;");
                                     return ("Benutzer erstellen", false);
                                 }
                             }
-                            else return ("Benutzer erstellen", false);
+                            else
+                            {
+                                dbc.CommandNonQuery("ROLLBACK;"); return ("Benutzer erstellen", false);
+                            }
                         }
 
                         foreach (var v in variables)
@@ -897,17 +975,22 @@ namespace Benutzerverwaltung
                                 var error = CreateUserVariable(id, v.Id, StringToDecimal(tbvariable));
                                 if (!error)
                                 {
+                                    dbc.CommandNonQuery("ROLLBACK;");
                                     return ("Benutzer erstellen", false);
                                 }
                             }
-                            else return ("Benutzer erstellen", false);
+                            else
+                            {
+                                dbc.CommandNonQuery("ROLLBACK;"); return ("Benutzer erstellen", false);
+                            }
                         }
-
+                        dbc.CommandNonQuery("COMMIT;");
                         return ("Benutzer erstellen", true);
                     }
                 }
                 else
                 {
+                    dbc.CommandNonQuery("BEGIN;");
                     var err = dbc.CommandNonQuery(string.Format(
                         "INSERT INTO Benutzer (BID, Name, Vorname, Strasse, PLZ, Ort, Geburtsdatum, Eintrittsdatum) VALUES(0, '{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}');",
                         tbusername, tbuservorname, tbuserstrasse, StringToInt(tbuserplz), tbuserort, StringToDate(tbusergeburtsdatum).ToString(), StringToDate(tbusereintrittsdatum).ToString()));
@@ -922,10 +1005,14 @@ namespace Benutzerverwaltung
                                 var error = CreateUserStatic(id, s.Id, (bool)cbstatic);
                                 if (!error)
                                 {
+                                    dbc.CommandNonQuery("ROLLBACK;");
                                     return ("Benutzer erstellen", false);
                                 }
                             }
-                            else return ("Benutzer erstellen", false);
+                            else
+                            {
+                                dbc.CommandNonQuery("ROLLBACK;"); return ("Benutzer erstellen", false);
+                            }
                         }
 
                         foreach (var v in variables)
@@ -936,12 +1023,16 @@ namespace Benutzerverwaltung
                                 var error = CreateUserVariable(id, v.Id, StringToDecimal(tbvariable));
                                 if (!error)
                                 {
+                                    dbc.CommandNonQuery("ROLLBACK;");
                                     return ("Benutzer erstellen", false);
                                 }
                             }
-                            else return ("Benutzer erstellen", false);
+                            else
+                            {
+                                dbc.CommandNonQuery("ROLLBACK;"); return ("Benutzer erstellen", false);
+                            }
                         }
-
+                        dbc.CommandNonQuery("COMMIT;");
                         return ("Benutzer erstellen", true);
                     }
                 }

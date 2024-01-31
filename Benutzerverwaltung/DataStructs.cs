@@ -9,7 +9,6 @@ using System.Data;
 
 namespace Benutzerverwaltung
 {
-    public enum Einheit { quadratmeter, liter, euro}
     public class User
     {
         public int Id;
@@ -115,11 +114,11 @@ namespace Benutzerverwaltung
         public string Formel;
         public decimal Default;
 
-        public Variable(int id, string name, string Formel, decimal defaultvalue)
+        public Variable(int id, string name, string formel, decimal defaultvalue)
         {
             this.Id = id;
             this.Name = name;
-            this.Formel = Formel;
+            this.Formel = formel;
             this.Default = defaultvalue;
         }
 

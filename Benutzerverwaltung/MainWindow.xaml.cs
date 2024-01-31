@@ -257,8 +257,8 @@ namespace Benutzerverwaltung
             CreateTextBlock("Name", 1, 0, HorizontalAlignment.Left);
             CreateTextBlock("Wert", 2, 0, HorizontalAlignment.Left);
             CreateTextBlock("standartmäßig aktiv?", 3, 0, HorizontalAlignment.Left);
-            CreateTextBlock("Löschen", 4, 0, HorizontalAlignment.Left);
-            CreateTextBlock("Ändern", 5, 0, HorizontalAlignment.Left);
+            CreateTextBlock("Löschen", 4, 0, HorizontalAlignment.Center);
+            CreateTextBlock("Ändern", 5, 0, HorizontalAlignment.Center);
             int row = 1;
             foreach(var st in s)
             {
@@ -266,8 +266,8 @@ namespace Benutzerverwaltung
                 CreateTextBlock(st.Name, 1, row, HorizontalAlignment.Left);
                 CreateTextBlock(st.Wert.ToString(), 2, row, HorizontalAlignment.Left);
                 if (st.Default) CreateTextBlock("Ja", 3, row, HorizontalAlignment.Left); else CreateTextBlock("Nein", 3, row, HorizontalAlignment.Left);
-                CreateButton("X", 4, row, st.Id, View.StatischePosten, Mode.Delete, null);
-                CreateButton("...", 5, row, st.Id, View.StatischePosten, Mode.Administrate, null);
+                CreateButton("X", 4, row, st.Id, View.StatischePosten, Mode.Delete, null, HorizontalAlignment.Center);
+                CreateButton("...", 5, row, st.Id, View.StatischePosten, Mode.Administrate, null, HorizontalAlignment.Center);
                 row++;
             }
             CreateButton("Neuer Posten", 1, row, 0, View.StatischePosten, Mode.CreateNew, null);
@@ -289,15 +289,15 @@ namespace Benutzerverwaltung
 
             CreateTextBlock("Nummer", 0, 0, HorizontalAlignment.Left); CreateTextBlock("Name", 1, 0, HorizontalAlignment.Left); CreateTextBlock("Vorname", 2, 0, HorizontalAlignment.Left); CreateTextBlock("Strasse", 3, 0, HorizontalAlignment.Left);
             CreateTextBlock("PLZ", 4, 0, HorizontalAlignment.Left); CreateTextBlock("Ort", 5, 0, HorizontalAlignment.Left); CreateTextBlock("Geburtsdatum", 6, 0, HorizontalAlignment.Left); CreateTextBlock("Eintrittsdatum", 7, 0, HorizontalAlignment.Left);
-            CreateTextBlock("Löschen", 8, 0, HorizontalAlignment.Left); CreateTextBlock("Ändern", 9, 0, HorizontalAlignment.Left);
+            CreateTextBlock("Löschen", 8, 0, HorizontalAlignment.Center); CreateTextBlock("Ändern", 9, 0, HorizontalAlignment.Center);
             int row = 1;
             foreach(var user in u)
             {
                 CreateTextBlock(row.ToString(), 0, row, HorizontalAlignment.Left);
                 CreateTextBlock(user.Name, 1, row, HorizontalAlignment.Left); CreateTextBlock(user.Vorname, 2, row, HorizontalAlignment.Left); CreateTextBlock(user.Strasse, 3, row, HorizontalAlignment.Left); CreateTextBlock(user.PLZ.ToString(), 4, row, HorizontalAlignment.Left);
                 CreateTextBlock(user.Ort, 5, row, HorizontalAlignment.Left); CreateTextBlock(user.Geburtstag.ToString(), 6, row, HorizontalAlignment.Left); CreateTextBlock(user.Eintrittsdatum.ToString(), 7, row, HorizontalAlignment.Left);
-                CreateButton("X", 8, row, user.Id, View.Benutzer, Mode.Delete, user);
-                CreateButton("...", 9, row, user.Id, View.Benutzer, Mode.Administrate, user);
+                CreateButton("X", 8, row, user.Id, View.Benutzer, Mode.Delete, user, HorizontalAlignment.Center);
+                CreateButton("...", 9, row, user.Id, View.Benutzer, Mode.Administrate, user, HorizontalAlignment.Center);
                 row++;
             }
             CreateButton("Neuer Benutzer", 1, row, 0, View.Benutzer, Mode.CreateNew, null);
@@ -317,8 +317,8 @@ namespace Benutzerverwaltung
             CreateTextBlock("Name", 1, 0, HorizontalAlignment.Left);
             CreateTextBlock("Formel", 2, 0, HorizontalAlignment.Left);
             CreateTextBlock("StandartWert", 3, 0, HorizontalAlignment.Left);
-            CreateTextBlock("Löschen", 4, 0, HorizontalAlignment.Left);
-            CreateTextBlock("Ändern", 5, 0, HorizontalAlignment.Left);
+            CreateTextBlock("Löschen", 4, 0, HorizontalAlignment.Center);
+            CreateTextBlock("Ändern", 5, 0, HorizontalAlignment.Center);
             int row = 1;
             foreach(var variable in v)
             {
@@ -326,8 +326,8 @@ namespace Benutzerverwaltung
                 CreateTextBlock(variable.Name, 1, row, HorizontalAlignment.Left);
                 CreateTextBlock(variable.Formel, 2, row, HorizontalAlignment.Left);
                 CreateTextBlock(variable.Default.ToString(), 3, row, HorizontalAlignment.Left);
-                CreateButton("X", 4, row, variable.Id, View.VariablePosten, Mode.Delete, null);
-                CreateButton("...", 5, row, variable.Id, View.VariablePosten, Mode.Administrate, null);
+                CreateButton("X", 4, row, variable.Id, View.VariablePosten, Mode.Delete, null, HorizontalAlignment.Center);
+                CreateButton("...", 5, row, variable.Id, View.VariablePosten, Mode.Administrate, null, HorizontalAlignment.Center);
                 row++;
             }
             CreateButton("Neuer Posten", 1, row, 0, View.VariablePosten, Mode.CreateNew, null);
@@ -343,15 +343,15 @@ namespace Benutzerverwaltung
 
             CreateTextBlock("Nummer", 0, 0, HorizontalAlignment.Left);
             CreateTextBlock("Jahre", 1, 0, HorizontalAlignment.Left);
-            CreateTextBlock("Löschen", 2, 0, HorizontalAlignment.Left);
-            CreateTextBlock("Ändern", 3, 0, HorizontalAlignment.Left);
+            CreateTextBlock("Löschen", 2, 0, HorizontalAlignment.Center);
+            CreateTextBlock("Ändern", 3, 0, HorizontalAlignment.Center);
             int row = 1;
             foreach(var jub in j)
             {
                 CreateTextBlock(row.ToString(), 0, row, HorizontalAlignment.Left);
                 CreateTextBlock(jub.Jahre.ToString(), 1, row, HorizontalAlignment.Left);
-                CreateButton("X", 2, row, jub.Id, View.Jubilaeen, Mode.Delete, null);
-                CreateButton("...", 3, row, jub.Id, View.Jubilaeen, Mode.Administrate, null);
+                CreateButton("X", 2, row, jub.Id, View.Jubilaeen, Mode.Delete, null, HorizontalAlignment.Center);
+                CreateButton("...", 3, row, jub.Id, View.Jubilaeen, Mode.Administrate, null, HorizontalAlignment.Center);
                 row++;
             }
             CreateButton("Neues Jubiläum", 1, row, 0, View.Jubilaeen, Mode.CreateNew, null);
@@ -399,7 +399,7 @@ namespace Benutzerverwaltung
             foreach (var s in ls) { CreateTextBlock(s.Name, col, 0, HorizontalAlignment.Left); col++; sums[col] = 0; }
             foreach (var v in lv) { CreateTextBlock(v.Name, col, 0, HorizontalAlignment.Left); col++; sums[col] = 0; }
             CreateTextBlock("Gesamt", col, 0, HorizontalAlignment.Left); sums[col] = 0;
-            CreateTextBlock("Bearbeiten", col + 1, 0, HorizontalAlignment.Left);
+            CreateTextBlock("Bearbeiten", col + 1, 0, HorizontalAlignment.Center);
             int row = 1;
             foreach(var u in lu)
             {
@@ -443,12 +443,12 @@ namespace Benutzerverwaltung
                     col++;
                 }
                 CreateTextBlock(sum.ToString(), col, row, HorizontalAlignment.Left);
-                CreateButton("...", col + 1, row, u.Id, View.GesamtAktuell, Mode.Administrate, u);
+                CreateButton("...", col + 1, row, u.Id, View.GesamtAktuell, Mode.Administrate, u, HorizontalAlignment.Center);
                 sums[col] += sum;
                 row++;
             }
             CreateTextBlock("Summe", 2, row, HorizontalAlignment.Left);
-            for(col = 3; col < sums.Length; col++)
+            for(col = 3; col < sums.Length - 1; col++)
             {
                 CreateTextBlock(sums[col].ToString(), col, row, HorizontalAlignment.Left);
             }        
@@ -475,7 +475,7 @@ namespace Benutzerverwaltung
             Grid.SetRow(bd, row);
             DataGrid.Children.Add(bd);
         }
-        private void CreateButton(string text, int column, int row, int id, View view, Mode mode, User? user)
+        private void CreateButton(string text, int column, int row, int id, View view, Mode mode, User? user, HorizontalAlignment? alignment = null)
         {
             (int id, View view, Mode mode, User? user) vt = new(id, view, mode, user);
             Button bt = new Button()
@@ -494,7 +494,7 @@ namespace Benutzerverwaltung
                 Background = (mode == Mode.Delete) ? DeleteBackground : (mode == Mode.CreateNew) ? CreateBackground : AdminBackground,
                 Margin = new Thickness(5),
                 VerticalAlignment = VerticalAlignment.Center,
-                HorizontalAlignment = HorizontalAlignment.Left,
+                HorizontalAlignment = (alignment is null) ? HorizontalAlignment.Left : (HorizontalAlignment)alignment,
                 Child = bt
             };
             Grid.SetColumn(bd, column);

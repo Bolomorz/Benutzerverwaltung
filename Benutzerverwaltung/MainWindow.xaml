@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Benutzerverwaltung"
         mc:Ignorable="d"
         Title="MainWindow" Height="800" Width="1600">
-    <Grid x:Name="MainGrid">
+    <Grid x:Name="MainGrid" Background="Azure">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="7*"/>
             <ColumnDefinition Width="*"/>
@@ -22,38 +22,38 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Grid.Column="1" Grid.Row="0" Margin="5, 5, 5, 5" VerticalAlignment="Center" HorizontalAlignment="Left">
+        <Border BorderThickness="1" BorderBrush="Black" Background="LightSlateGray" Grid.Column="1" Grid.Row="0" Margin="5, 5, 5, 5" VerticalAlignment="Top" HorizontalAlignment="Left">
             <Button Click="ClickVWB" Margin="5" >Verwaltung Benutzer</Button>
         </Border>
-        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Grid.Column="1" Grid.Row="1" Margin="5, 5, 5, 5" VerticalAlignment="Center" HorizontalAlignment="Left">
+        <Border BorderThickness="1" BorderBrush="Black" Background="LightSlateGray" Grid.Column="1" Grid.Row="0" Margin="5, 5, 5, 5" VerticalAlignment="Bottom" HorizontalAlignment="Left">
             <Button Click="ClickVWVP" Margin="5" >Verwaltung Variable Posten</Button>
         </Border>
-        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Grid.Column="1" Grid.Row="2" Margin="5, 5, 5, 5" VerticalAlignment="Center" HorizontalAlignment="Left">
+        <Border BorderThickness="1" BorderBrush="Black" Background="LightSlateGray" Grid.Column="1" Grid.Row="1" Margin="5, 5, 5, 5" VerticalAlignment="Top" HorizontalAlignment="Left">
             <Button Click="ClickVWSP" Margin="5" >Verwaltung Statische Posten</Button>
         </Border>
-        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Grid.Column="1" Grid.Row="3" Margin="5, 5, 5, 5" VerticalAlignment="Center" HorizontalAlignment="Left">
+        <Border BorderThickness="1" BorderBrush="Black" Background="LightSlateGray" Grid.Column="1" Grid.Row="1" Margin="5, 5, 5, 5" VerticalAlignment="Bottom" HorizontalAlignment="Left">
             <Button Click="ClickVWJ" Margin="5" >Verwaltung Jubiläen</Button>
         </Border>
-        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Grid.Column="0" Grid.Row="8" Margin="5, 5, 5, 5" VerticalAlignment="Center" HorizontalAlignment="Right">
+        <Border BorderThickness="1" BorderBrush="Black" Background="LightSlateGray" Grid.Column="0" Grid.Row="8" Margin="5, 5, 5, 5" VerticalAlignment="Center" HorizontalAlignment="Right">
             <Button Click="ClickJub" Margin="5" >Aktuelle Jubiläen</Button>
         </Border>
-        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Grid.Column="0" Grid.Row="8" Margin="5, 5, 5, 5" VerticalAlignment="Center" HorizontalAlignment="Left">
+        <Border BorderThickness="1" BorderBrush="Black" Background="LightSlateGray" Grid.Column="0" Grid.Row="8" Margin="5, 5, 5, 5" VerticalAlignment="Center" HorizontalAlignment="Left">
             <Button Click="ClickGesamt" Margin="5" >Gesamt Ansicht</Button>
         </Border>
 
-        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Grid.Column="0" Margin="5" VerticalAlignment="Center" HorizontalAlignment="Right" Width="300">
+        <Border BorderThickness="1" BorderBrush="Black" Background="LightSlateGray" Grid.Column="0" Margin="5" VerticalAlignment="Center" HorizontalAlignment="Right" Width="300">
             <TextBox x:Name="TBSearch" KeyUp="SearchTextChanged" Margin="5"/>
         </Border>
-        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Grid.Column="0" Margin="5, 5, 305, 5" VerticalAlignment="Center" HorizontalAlignment="Right" Width="50">
+        <Border BorderThickness="1" BorderBrush="Black" Background="LightSlateGray" Grid.Column="0" Margin="5, 5, 305, 5" VerticalAlignment="Center" HorizontalAlignment="Right" Width="50">
             <TextBlock Text ="Suchen: " Margin="5"/>
         </Border>
-        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Grid.Column="0" Margin="5" VerticalAlignment="Center" HorizontalAlignment="Left">
+        <Border BorderThickness="1" BorderBrush="Black" Background="LightSlateGray" Grid.Column="0" Margin="5" VerticalAlignment="Center" HorizontalAlignment="Left">
             <TextBlock x:Name="TBView" Margin="5"/>
         </Border>
 
-        <Border BorderThickness="1" BorderBrush="Black" Background="Gainsboro" Grid.Column="0" Grid.Row="1" Grid.RowSpan="7" Margin="5">
+        <Border BorderThickness="1" BorderBrush="Black" Background="LightSlateGray" Grid.Column="0" Grid.Row="1" Grid.RowSpan="7" Margin="5">
             <ScrollViewer x:Name="sv" Margin="5" VerticalScrollBarVisibility="Visible" HorizontalScrollBarVisibility="Visible">
-                <Grid x:Name="DataGrid" Margin="5">
+                <Grid x:Name="DataGrid" Margin="5" ShowGridLines="False">
 
                 </Grid>
             </ScrollViewer>
