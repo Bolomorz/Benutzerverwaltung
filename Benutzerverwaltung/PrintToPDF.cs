@@ -4,114 +4,105 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
-using iText.Kernel.Pdf;
-using iText.Layout;
-using System.Security.Cryptography.Xml;
-using iText.Layout.Element;
+using PdfSharp;
+using PdfSharp.Pdf;
+using PdfSharp.Drawing;
+using PdfSharp.Fonts;
+using PdfSharp.Snippets.Font;
 
 namespace Benutzerverwaltung
 {
     static internal class PrintToPDF
     {
+        static XFont fontheading = new("Arial", 20);
+        static XFont fonttext = new("Arial", 10);
+        static XBrush brush = XBrushes.Black;
+
+        static XRect Rempf = new(
+            new XPoint(MillimeterToPointWidth(25), MillimeterToPointHeight(32)),
+            new XPoint(MillimeterToPointWidth(105), MillimeterToPointHeight(72)));
+        static XRect Rabs = new(
+            new XPoint(MillimeterToPointWidth(125), MillimeterToPointHeight(32)),
+            new XPoint(MillimeterToPointWidth(200), MillimeterToPointHeight(72)));
+        static XRect Rlogo = new(
+            new XPoint(MillimeterToPointWidth(25), MillimeterToPointHeight(0)),
+            new XPoint(MillimeterToPointWidth(190), MillimeterToPointHeight(27)));
+        static XRect Rtext = new(
+            new XPoint(MillimeterToPointWidth(25), MillimeterToPointHeight(80)),
+            new XPoint(MillimeterToPointWidth(190), MillimeterToPointHeight(250)));
+        static XRect Rfirma = new(
+            new XPoint(MillimeterToPointWidth(25), MillimeterToPointHeight(260)),
+            new XPoint(MillimeterToPointWidth(190), MillimeterToPointHeight(287)));
+        static XRect Rseite = new(
+            new XPoint(MillimeterToPointWidth(160), MillimeterToPointHeight(251)),
+            new XPoint(MillimeterToPointWidth(190), MillimeterToPointHeight(259)));
+
         public static void PrintUserToInvoice(User user, string file, DataBaseConnection.Date today)
         {
-            PdfWriter writer = new PdfWriter(file);
-            PdfDocument pdf = new PdfDocument(writer);
-            Document document = new Document(pdf);
+            if (Capabilities.Build.IsCoreBuild) GlobalFontSettings.FontResolver = new FailsafeFontResolver();
 
-            Paragraph header = new Paragraph(string.Format("Rechnung vom {0}\n", today))
-                .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
-                .SetFontSize(20);
-            document.Add(header);
+            var document = new PdfDocument();
+            document.Info.Title = string.Format("Rechnung {0} {1} {2}", user.Vorname, user.Name, today);
+            var page = document.AddPage();
+            page.Size = PageSize.A4;
+            var gfx = XGraphics.FromPdfPage(page);
 
-            Paragraph empf = new Paragraph(string.Format("{0} {1}\n{2}\n{3} {4}\n", user.Vorname, user.Name, user.Strasse, user.PLZ, user.Ort))
-                .SetTextAlignment(iText.Layout.Properties.TextAlignment.LEFT)
-                .SetFontSize(10);
-            document.Add(empf);
+            string sseite = "Seite 1";
+            gfx.DrawString(sseite, fonttext, brush, Rseite, XStringFormats.CenterRight);
 
-            Paragraph abs = new Paragraph("Garten\nAnke Schneider\nFabrikweg 3\n95176 Konradsreuth\n")
-                .SetTextAlignment(iText.Layout.Properties.TextAlignment.RIGHT)
-                .SetFontSize(10);
-            document.Add(abs);
+            string sempf = string.Format("{0} {1}\n{2}\n{3} {4}", user.Vorname, user.Name, user.Strasse, user.PLZ, user.Ort);
+            gfx.DrawString(sempf, fonttext, brush, Rempf, XStringFormats.TopLeft);
 
-            Paragraph subheader = new Paragraph("Rechnungsposten:\n")
-                .SetTextAlignment(iText.Layout.Properties.TextAlignment.LEFT)
-                .SetFontSize(10);
-            document.Add(subheader);
+            string sabs = "Gartenverein\nAnke Schneider\nFabrikweg 3\n95176 Konradsreuth";
+            gfx.DrawString(sabs, fonttext, brush, Rabs, XStringFormats.TopLeft);
 
-            decimal sum = 0;
-            Table statics = new Table(2, false);
-            foreach(var s in user.statics)
-            {
-                if(s.b)
-                {
-                    Cell cell1 = new Cell(1, 1)
-                        .SetTextAlignment(iText.Layout.Properties.TextAlignment.LEFT)
-                        .Add(new Paragraph(s.s.Name));
-                    Cell cell2 = new Cell(1, 1)
-                        .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
-                        .Add(new Paragraph(s.s.Wert.ToString()));
-                    sum += s.s.Wert;
-                    statics.AddCell(cell1);
-                    statics.AddCell(cell2);
-                }
-            }
-            document.Add(statics);
-            document.Add(new Paragraph("\n"));
-            Table variables = new Table(3, false);
-            foreach(var v in user.variables)
-            {
-                var value = v.v.CalcValue(v.w);
-                Cell cell1, cell2, cell3;
-                if(value == v.w)
-                {
-                    cell1 = new Cell(1, 1)
-                        .SetTextAlignment(iText.Layout.Properties.TextAlignment.LEFT)
-                        .Add(new Paragraph(v.v.Name));
-                    cell2 = new Cell(1, 1)
-                        .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
-                        .Add(new Paragraph("-"));
-                    cell3 = new Cell(1, 1)
-                        .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
-                        .Add(new Paragraph(value.ToString()));
-                }
-                else
-                {
-                    cell1 = new Cell(1, 1)
-                        .SetTextAlignment(iText.Layout.Properties.TextAlignment.LEFT)
-                        .Add(new Paragraph(v.v.Name));
-                    cell2 = new Cell(1, 1)
-                        .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
-                        .Add(new Paragraph(v.w.ToString()));
-                    cell3 = new Cell(1, 1)
-                        .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
-                        .Add(new Paragraph(value.ToString()));
-                }
-                sum += value;
-                variables.AddCell(cell1);
-                variables.AddCell(cell2);
-                variables.AddCell(cell3);
-            }
-            document.Add(variables);
-            document.Add(new Paragraph("\n"));
-            Table summe = new Table(2, false);
-            Cell ctext = new Cell(1, 1)
-                .SetTextAlignment(iText.Layout.Properties.TextAlignment.LEFT)
-                .Add(new Paragraph("Summe:"));
-            Cell csum = new Cell(1, 1)
-                .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
-                .Add(new Paragraph(sum.ToString()));
-            summe.AddCell(ctext);
-            summe.AddCell(csum);
-            document.Add(summe);
+            string shead = "Rechnung Titel";
+            gfx.DrawString(shead, fontheading, brush, Rlogo, XStringFormats.Center);
+
+            int iseite = 1;
+            int starty = 90;
+            int intervally = 20;
+            int endy = 250;
+
+            string ssubhead = string.Format("Rechnung {0} {1} {2}", user.Vorname, user.Name, today);
+            XRect Rsub = new XRect(
+                new XPoint(MillimeterToPointWidth(25), MillimeterToPointHeight(starty)),
+                new XPoint(MillimeterToPointWidth(190), MillimeterToPointHeight(starty + intervally)));
+            gfx.DrawString(ssubhead, fonttext, brush, )
 
 
+            document.Save(file);
             document.Close();
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(file) { UseShellExecute = true });
         }
 
         public static void PrintUserListToTable(List<User> users, string file) 
         {
+            if (Capabilities.Build.IsCoreBuild) GlobalFontSettings.FontResolver = new FailsafeFontResolver();
 
+            var document = new PdfDocument();
+            document.Info.Title = string.Format("Nutzer Liste");
+            var page = document.AddPage();
+            page.Size = PageSize.A4;
+            page.Orientation = PageOrientation.Landscape;
+            var gfx = XGraphics.FromPdfPage(page);
+
+            document.Save(file);
+            document.Close();
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(file) { UseShellExecute = true });
+        }
+
+        private static double MillimeterToPointWidth(double mm)
+        {
+            //DIN A4 210 mm -> 595 pt
+            var percent = mm / 210;
+            return percent * 595;
+        }
+        private static double MillimeterToPointHeight(double mm)
+        {
+            //DIN A4 297 mm -> 842 pt
+            var percent = mm / 297;
+            return percent * 842;
         }
     }
 }
