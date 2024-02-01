@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,7 +24,7 @@ namespace Benutzerverwaltung
     public partial class MainWindow : Window
     {
         public enum View { Benutzer, VariablePosten, StatischePosten, Jubilaeen, GesamtAktuell, JubilaeenAktuell}
-        public enum Mode { Delete, Administrate, CreateNew}
+        public enum Mode { Delete, Administrate, CreateNew, CreateInvoice, CreateListFile}
         public enum JubilaeumMode { Birthday, Join}
 
         private DataBaseConnection dbc;
@@ -40,6 +42,8 @@ namespace Benutzerverwaltung
         public static Brush DeleteBackground = Brushes.MistyRose;
         public static Brush AdminForeground = Brushes.Green;
         public static Brush AdminBackground = Brushes.YellowGreen;
+        public static Brush SaveForeground = Brushes.Black;
+        public static Brush SaveBackground = Brushes.LightYellow;
 
         public MainWindow()
         {
@@ -55,6 +59,8 @@ namespace Benutzerverwaltung
             TBView.Text = "Aktuelle Ansicht: Gesamt";
             LoadData();
             LoadControls();
+            if (!Directory.Exists("Rechnungen")) Directory.CreateDirectory("Rechnungen");
+            if (!Directory.Exists("NutzerListen")) Directory.CreateDirectory("NutzerListen");
         }
 
         public void Reload()
@@ -389,17 +395,18 @@ namespace Benutzerverwaltung
         private void WriteCurrentUsers(List<User> lu, List<Static> ls, List<Variable> lv)
         {
             int rows = lu.Count + 2;
-            int cols = 2 + ls.Count + lv.Count + 2;
+            int cols = 2 + ls.Count + lv.Count + 3;
             DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(1, GridUnitType.Star) });
             for(int i = 0; i < cols; i++) DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });
             for (int i = 0; i < rows; i++) DataGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });
             CreateTextBlock("Nummer", 0, 0, HorizontalAlignment.Left); CreateTextBlock("Name", 1, 0, HorizontalAlignment.Left); CreateTextBlock("Vorname", 2, 0, HorizontalAlignment.Left);
-            decimal[] sums = new decimal[cols+1];
+            decimal[] sums = new decimal[cols];
             int col = 3;
             foreach (var s in ls) { CreateTextBlock(s.Name, col, 0, HorizontalAlignment.Left); col++; sums[col] = 0; }
             foreach (var v in lv) { CreateTextBlock(v.Name, col, 0, HorizontalAlignment.Left); col++; sums[col] = 0; }
             CreateTextBlock("Gesamt", col, 0, HorizontalAlignment.Left); sums[col] = 0;
             CreateTextBlock("Bearbeiten", col + 1, 0, HorizontalAlignment.Center);
+            CreateTextBlock("Rechnung", col + 2, 0, HorizontalAlignment.Center);
             int row = 1;
             foreach(var u in lu)
             {
@@ -444,6 +451,7 @@ namespace Benutzerverwaltung
                 }
                 CreateTextBlock(sum.ToString(), col, row, HorizontalAlignment.Left);
                 CreateButton("...", col + 1, row, u.Id, View.GesamtAktuell, Mode.Administrate, u, HorizontalAlignment.Center);
+                CreateButton("R", col + 2, row, u.Id, View.GesamtAktuell, Mode.CreateInvoice, u, HorizontalAlignment.Center);
                 sums[col] += sum;
                 row++;
             }
@@ -451,7 +459,8 @@ namespace Benutzerverwaltung
             for(col = 3; col < sums.Length - 1; col++)
             {
                 CreateTextBlock(sums[col].ToString(), col, row, HorizontalAlignment.Left);
-            }        
+            }
+            CreateButton("Liste Drucken", 1, row + 1, 0, View.GesamtAktuell, Mode.CreateListFile, null, HorizontalAlignment.Left, lu);
         }
 
         private void CreateTextBlock(string text, int column, int row, HorizontalAlignment alignment)
@@ -475,23 +484,23 @@ namespace Benutzerverwaltung
             Grid.SetRow(bd, row);
             DataGrid.Children.Add(bd);
         }
-        private void CreateButton(string text, int column, int row, int id, View view, Mode mode, User? user, HorizontalAlignment? alignment = null)
+        private void CreateButton(string text, int column, int row, int id, View view, Mode mode, User? user, HorizontalAlignment? alignment = null, List<User>? users = null)
         {
-            (int id, View view, Mode mode, User? user) vt = new(id, view, mode, user);
+            (int id, View view, Mode mode, User? user, List<User>? users) vt = new(id, view, mode, user, users);
             Button bt = new Button()
             {
                 Margin = new Thickness(5),
                 Content = text,
                 Tag = vt,
-                Background = (mode == Mode.Delete) ? DeleteBackground : (mode == Mode.CreateNew) ? CreateBackground : AdminBackground,
-                Foreground = (mode == Mode.Delete) ? DeleteForeground : (mode == Mode.CreateNew) ? CreateForeground : AdminForeground
+                Background = (mode == Mode.Delete) ? DeleteBackground : (mode == Mode.CreateNew) ? CreateBackground : (mode == Mode.Administrate) ? AdminBackground : SaveBackground,
+                Foreground = (mode == Mode.Delete) ? DeleteForeground : (mode == Mode.CreateNew) ? CreateForeground : (mode == Mode.Administrate) ? AdminForeground : SaveForeground,
             };
             bt.Click += ClickButton;
             Border bd = new Border()
             {
                 BorderThickness = new Thickness(1),
-                BorderBrush = (mode == Mode.Delete) ? DeleteForeground : (mode == Mode.CreateNew) ? CreateForeground : AdminForeground,
-                Background = (mode == Mode.Delete) ? DeleteBackground : (mode == Mode.CreateNew) ? CreateBackground : AdminBackground,
+                BorderBrush = (mode == Mode.Delete) ? DeleteForeground : (mode == Mode.CreateNew) ? CreateForeground : (mode == Mode.Administrate) ? AdminForeground : SaveForeground,
+                Background = (mode == Mode.Delete) ? DeleteBackground : (mode == Mode.CreateNew) ? CreateBackground : (mode == Mode.Administrate) ? AdminBackground  : SaveBackground,
                 Margin = new Thickness(5),
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = (alignment is null) ? HorizontalAlignment.Left : (HorizontalAlignment)alignment,
@@ -648,11 +657,17 @@ namespace Benutzerverwaltung
         private void ClickButton(object sender, RoutedEventArgs e)
         {
             Button bt = (Button)sender;
-            var btinfo = ((int id, View view, Mode mode, User? user))bt.Tag;
+            var btinfo = ((int id, View view, Mode mode, User? user, List<User>? users))bt.Tag;
             switch (btinfo.mode)
             {
                 case Mode.Delete:
                     Delete(btinfo.id, btinfo.view);
+                    break;
+                case Mode.CreateInvoice:
+                    SaveToPDF(btinfo.mode, btinfo.user);
+                    break;
+                case Mode.CreateListFile:
+                    SaveToPDF(btinfo.mode, btinfo.user, btinfo.users);
                     break;
                 default:
                     Admin(btinfo.id, btinfo.view, btinfo.mode, btinfo.user);
@@ -730,7 +745,36 @@ namespace Benutzerverwaltung
                     break;
             }
         }
+        private void SaveToPDF(Mode mode, User? user = null, List<User>? users = null)
+        {
+            if (mode != Mode.CreateInvoice && mode != Mode.CreateListFile) return;
+            string dir = (mode == Mode.CreateInvoice) ?
+                System.IO.Path.GetFullPath(System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, @"Rechnungen")) :
+                System.IO.Path.GetFullPath(System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, @"NutzerListen"));
+            SaveFileDialog sfd = new()
+            {
+                Title = (mode == Mode.CreateInvoice) ? "Rechnung Speichern" : "Liste Speichern",
+                InitialDirectory = dir,
+                Filter = "PDF|*.pdf",
+                DefaultExt = ".pdf",
+                FilterIndex = 1,
+                RestoreDirectory = true
+            };
 
+            if(sfd.ShowDialog() == true)
+            {
+                var path = sfd.FileName;
+                switch (mode)
+                {
+                    case Mode.CreateInvoice:
+                        if (user is not null) PrintToPDF.PrintUserToInvoice(user, path, new DataBaseConnection.Date(DateTime.Today));
+                        break;
+                    case Mode.CreateListFile:
+                        if (users is not null) PrintToPDF.PrintUserListToTable(users, path);
+                        break;
+                }
+            }
+        }
         private void Admin(int id, View view, Mode mode, User? user)
         {
             ConfigWindow child = new ConfigWindow(this, id, view, mode, dbc, statics, variables, users, user);
