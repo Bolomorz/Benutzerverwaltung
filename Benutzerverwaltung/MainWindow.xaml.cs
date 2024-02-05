@@ -1,4 +1,7 @@
 ﻿using Microsoft.Win32;
+using PdfSharp.Fonts;
+using PdfSharp.Snippets.Font;
+using PdfSharp;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity.Core.Common.CommandTrees.ExpressionBuilder;
@@ -62,6 +65,7 @@ namespace Benutzerverwaltung
             LoadControls();
             if (!Directory.Exists("Rechnungen")) Directory.CreateDirectory("Rechnungen");
             if (!Directory.Exists("NutzerListen")) Directory.CreateDirectory("NutzerListen");
+            if (Capabilities.Build.IsCoreBuild) GlobalFontSettings.FontResolver = new FailsafeFontResolver();
         }
 
         public void Reload()
@@ -775,7 +779,7 @@ namespace Benutzerverwaltung
                         if (user is not null) PrintToPDF.PrintUserToInvoice(user, path, new DataBaseConnection.Date(DateTime.Today));
                         break;
                     case Mode.CreateListFile:
-                        if (users is not null) PrintToPDF.PrintUserListToTable(users, path);
+                        if (users is not null) PrintToPDF.PrintUserListToTable(users, statics, variables, path);
                         break;
                 }
             }

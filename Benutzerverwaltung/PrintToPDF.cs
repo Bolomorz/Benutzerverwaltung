@@ -9,6 +9,8 @@ using PdfSharp.Pdf;
 using PdfSharp.Drawing;
 using PdfSharp.Fonts;
 using PdfSharp.Snippets.Font;
+using System.Windows;
+using PdfSharp.UniversalAccessibility.Drawing;
 
 namespace Benutzerverwaltung
 {
@@ -30,8 +32,6 @@ namespace Benutzerverwaltung
 
         public static void PrintUserToInvoice(User user, string file, DataBaseConnection.Date today)
         {
-            if (Capabilities.Build.IsCoreBuild) GlobalFontSettings.FontResolver = new FailsafeFontResolver();
-
             var document = new PdfDocument();
             document.Info.Title = string.Format("Rechnung {0} {1} {2}", user.Vorname, user.Name, today);
             var page = document.AddPage();
@@ -104,9 +104,6 @@ namespace Benutzerverwaltung
                 new XPoint(MillimeterToPointWidth(140), MillimeterToPointHeight(starty)),
                 new XPoint(MillimeterToPointWidth(190), MillimeterToPointHeight(starty + intervally)));
             gfx.DrawString("Wert", fonttext, brush, RTable, XStringFormats.CenterLeft);
-            RTable = new XRect(
-                new XPoint(MillimeterToPointWidth(140), MillimeterToPointHeight(starty)),
-                new XPoint(MillimeterToPointWidth(190), MillimeterToPointHeight(starty + intervally)));
             gfx.DrawString("Rechnungsbetrag", fonttext, brush, RTable, XStringFormats.CenterRight);
             gfx.DrawLine(new XPen(XColors.Black), new XPoint(MillimeterToPointWidth(40), MillimeterToPointHeight(starty + intervally)),
                 new XPoint(MillimeterToPointWidth(190), MillimeterToPointHeight(starty + intervally)));
@@ -151,9 +148,6 @@ namespace Benutzerverwaltung
                             new XPoint(MillimeterToPointWidth(140), MillimeterToPointHeight(starty)),
                             new XPoint(MillimeterToPointWidth(190), MillimeterToPointHeight(starty + intervally)));
                         gfx.DrawString("Wert", fonttext, brush, RTable, XStringFormats.CenterLeft);
-                        RTable = new XRect(
-                            new XPoint(MillimeterToPointWidth(140), MillimeterToPointHeight(starty)),
-                            new XPoint(MillimeterToPointWidth(190), MillimeterToPointHeight(starty + intervally)));
                         gfx.DrawString("Rechnungsbetrag", fonttext, brush, RTable, XStringFormats.CenterRight);
                         gfx.DrawLine(new XPen(XColors.Black), new XPoint(MillimeterToPointWidth(40), MillimeterToPointHeight(starty + intervally)),
                             new XPoint(MillimeterToPointWidth(190), MillimeterToPointHeight(starty + intervally)));
@@ -206,9 +200,6 @@ namespace Benutzerverwaltung
                         new XPoint(MillimeterToPointWidth(140), MillimeterToPointHeight(starty)),
                         new XPoint(MillimeterToPointWidth(190), MillimeterToPointHeight(starty + intervally)));
                     gfx.DrawString("Wert", fonttext, brush, RTable, XStringFormats.CenterLeft);
-                    RTable = new XRect(
-                        new XPoint(MillimeterToPointWidth(140), MillimeterToPointHeight(starty)),
-                        new XPoint(MillimeterToPointWidth(190), MillimeterToPointHeight(starty + intervally)));
                     gfx.DrawString("Rechnungsbetrag", fonttext, brush, RTable, XStringFormats.CenterRight);
                     gfx.DrawLine(new XPen(XColors.Black), new XPoint(MillimeterToPointWidth(40), MillimeterToPointHeight(starty + intervally)),
                         new XPoint(MillimeterToPointWidth(190), MillimeterToPointHeight(starty + intervally)));
@@ -232,10 +223,8 @@ namespace Benutzerverwaltung
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(file) { UseShellExecute = true });
         }
 
-        public static void PrintUserListToTable(List<User> users, string file) 
+        public static void PrintUserListToTable(List<User> users, List<Static> statics, List<Variable> variables, string file) 
         {
-            if (Capabilities.Build.IsCoreBuild) GlobalFontSettings.FontResolver = new FailsafeFontResolver();
-
             var document = new PdfDocument();
             document.Info.Title = string.Format("Nutzer Liste");
             var page = document.AddPage();
@@ -243,9 +232,284 @@ namespace Benutzerverwaltung
             page.Orientation = PageOrientation.Landscape;
             var gfx = XGraphics.FromPdfPage(page);
 
+            /*      Nr      Name    Vorname Sta     Var     Sum
+             *      5mm     20mm    20mm    20mm    20mm    20mm
+             */
+            decimal[] colsums = new decimal[statics.Count + variables.Count + 1];
+            int intervally = 15;
+            int intervallx = 30;
+            int ix = 5;
+            int iy = 5;
+            int endx = 270;
+            int endy = 200;
+
+            XRect curr = new XRect(
+                new XPoint(MillimeterToPointHeight(ix), MillimeterToPointWidth(iy)),
+                new XPoint(MillimeterToPointHeight(ix + 5), MillimeterToPointWidth(iy + intervally)));
+            gfx.DrawString("Nr", fonttext, brush, curr, XStringFormats.CenterLeft);
+            ix += 5;
+            curr = new XRect(
+                new XPoint(MillimeterToPointHeight(ix), MillimeterToPointWidth(iy)),
+                new XPoint(MillimeterToPointHeight(ix + intervallx), MillimeterToPointWidth(iy + intervally)));
+            gfx.DrawString(" Name", fonttext, brush, curr, XStringFormats.CenterLeft);
+            ix += intervallx;
+            curr = new XRect(
+                new XPoint(MillimeterToPointHeight(ix), MillimeterToPointWidth(iy)),
+                new XPoint(MillimeterToPointHeight(ix + intervallx), MillimeterToPointWidth(iy + intervally)));
+            gfx.DrawString(" Vorname", fonttext, brush, curr, XStringFormats.CenterLeft);
+            ix += intervallx;
+            curr = new XRect(
+                new XPoint(MillimeterToPointHeight(ix), MillimeterToPointWidth(iy)),
+                new XPoint(MillimeterToPointHeight(270), MillimeterToPointWidth(iy + intervally)));
+            gfx.DrawString("Rechnungsposten", fonttext, brush, curr, XStringFormats.Center);
+            ix = 270;
+            curr = new XRect(
+                new XPoint(MillimeterToPointHeight(ix), MillimeterToPointWidth(iy)),
+                new XPoint(MillimeterToPointHeight(ix + intervallx), MillimeterToPointWidth(iy + intervally)));
+            gfx.DrawString(" Summe", fonttext, brush, curr, XStringFormats.CenterLeft);
+
+            iy += intervally;
+            gfx.DrawLine(new XPen(XColors.Black),
+                new XPoint(MillimeterToPointHeight(5), MillimeterToPointWidth(iy)),
+                new XPoint(MillimeterToPointHeight(290), MillimeterToPointWidth(iy)));
+
+            int col;
+            int usernr = 1;
+            foreach (var user in users)
+            {
+                col = 0;
+                decimal usersum = 0;
+
+                ix = 5;
+                curr = new XRect(
+                new XPoint(MillimeterToPointHeight(ix), MillimeterToPointWidth(iy)),
+                new XPoint(MillimeterToPointHeight(ix + 5), MillimeterToPointWidth(iy + intervally)));
+                gfx.DrawString(" " + usernr.ToString(), fonttext, brush, curr, XStringFormats.CenterLeft);
+                ix += 5;
+                curr = new XRect(
+                    new XPoint(MillimeterToPointHeight(ix), MillimeterToPointWidth(iy)),
+                    new XPoint(MillimeterToPointHeight(ix + intervallx), MillimeterToPointWidth(iy + intervally)));
+                gfx.DrawString(" " + user.Name, fonttext, brush, curr, XStringFormats.CenterLeft);
+                ix += intervallx;
+                curr = new XRect(
+                    new XPoint(MillimeterToPointHeight(ix), MillimeterToPointWidth(iy)),
+                    new XPoint(MillimeterToPointHeight(ix + intervallx), MillimeterToPointWidth(iy + intervally)));
+                gfx.DrawString(" " + user.Vorname, fonttext, brush, curr, XStringFormats.CenterLeft);
+                ix = 70;
+
+                foreach(var s in statics)
+                {
+                    var find = FindStaticInList(s, user.statics);
+                    if(find.b)
+                    {
+                        curr = new XRect(
+                            new XPoint(MillimeterToPointHeight(ix), MillimeterToPointWidth(iy)),
+                            new XPoint(MillimeterToPointHeight(ix + intervallx), MillimeterToPointWidth(iy + intervally / 2)));
+                        gfx.DrawString(find.s.Name, fonttext, brush, curr, XStringFormats.Center);
+                        curr = new XRect(
+                            new XPoint(MillimeterToPointHeight(ix), MillimeterToPointWidth(iy + intervally / 2)),
+                            new XPoint(MillimeterToPointHeight(ix + intervallx), MillimeterToPointWidth(iy + intervally)));
+                        gfx.DrawString(find.s.Wert.ToString(), fonttext, brush, curr, XStringFormats.Center);
+                        usersum += find.s.Wert;
+                        colsums[col] += find.s.Wert;
+                    }
+                    else
+                    {
+                        curr = new XRect(
+                            new XPoint(MillimeterToPointHeight(ix), MillimeterToPointWidth(iy)),
+                            new XPoint(MillimeterToPointHeight(ix + intervallx), MillimeterToPointWidth(iy + intervally / 2)));
+                        gfx.DrawString(find.s.Name, fonttext, brush, curr, XStringFormats.Center);
+                        curr = new XRect(
+                            new XPoint(MillimeterToPointHeight(ix), MillimeterToPointWidth(iy + intervally / 2)),
+                            new XPoint(MillimeterToPointHeight(ix + intervallx), MillimeterToPointWidth(iy + intervally)));
+                        gfx.DrawString("-", fonttext, brush, curr, XStringFormats.Center);
+                    }
+                    if (ix + 2 * intervallx <= endx) ix += intervallx;
+                    else
+                    {
+                        if(iy + 2 * intervally <= endy) iy += intervally;
+                        else
+                        {
+                            gfx = NewPageLandscape(document);
+                            iy = 20;
+                        }
+                        ix = 50;
+                    }
+                    col++;
+                }
+
+                foreach(var v in variables)
+                {
+                    var find = FindVariableInList(v, user.variables);
+                    var value = v.CalcValue(find.w);
+                    curr = new XRect(
+                            new XPoint(MillimeterToPointHeight(ix), MillimeterToPointWidth(iy)),
+                            new XPoint(MillimeterToPointHeight(ix + intervallx), MillimeterToPointWidth(iy + intervally / 2)));
+                    gfx.DrawString(find.v.Name, fonttext, brush, curr, XStringFormats.Center);
+                    curr = new XRect(
+                        new XPoint(MillimeterToPointHeight(ix), MillimeterToPointWidth(iy + intervally / 2)),
+                        new XPoint(MillimeterToPointHeight(ix + intervallx), MillimeterToPointWidth(iy + intervally)));
+                    gfx.DrawString(value.ToString(), fonttext, brush, curr, XStringFormats.Center);
+                    usersum += value;
+                    colsums[col] += value;
+                    if (ix + 2 * intervallx <= endx) ix += intervallx;
+                    else
+                    {
+                        if (iy + 2 * intervally <= endy) iy += intervally;
+                        else
+                        {
+                            gfx = NewPageLandscape(document);
+                            iy = 20;
+                        }
+                        ix = 50;
+                    }
+                    col++;
+                }
+
+                curr = new XRect(
+                    new XPoint(MillimeterToPointHeight(270), MillimeterToPointWidth(iy)),
+                    new XPoint(MillimeterToPointHeight(290), MillimeterToPointWidth(iy + intervally)));
+                gfx.DrawString(" " + usersum.ToString(), fonttext, brush, curr, XStringFormats.CenterLeft);
+
+                colsums[colsums.Length - 1] += usersum;
+
+                usernr++;
+
+                if (iy + 2 * intervally <= endy) iy += intervally;
+                else
+                {
+                    gfx = NewPageLandscape(document);
+                    iy = 20;
+                }
+                gfx.DrawLine(new XPen(XColors.Black),
+                    new XPoint(MillimeterToPointHeight(5), MillimeterToPointWidth(iy)),
+                    new XPoint(MillimeterToPointHeight(290), MillimeterToPointWidth(iy)));
+            }
+
+            curr = new XRect(
+                    new XPoint(MillimeterToPointHeight(40), MillimeterToPointWidth(iy)),
+                    new XPoint(MillimeterToPointHeight(70), MillimeterToPointWidth(iy + intervally)));
+            gfx.DrawString(" Summe", fonttext, brush, curr, XStringFormats.CenterLeft);
+
+            ix = 70;
+            col = 0;
+            foreach(var s in statics)
+            {
+                curr = new XRect(
+                    new XPoint(MillimeterToPointHeight(ix), MillimeterToPointWidth(iy)),
+                    new XPoint(MillimeterToPointHeight(ix + intervallx), MillimeterToPointWidth(iy + intervally / 2)));
+                gfx.DrawString(s.Name, fonttext, brush, curr, XStringFormats.Center);
+                curr = new XRect(
+                    new XPoint(MillimeterToPointHeight(ix), MillimeterToPointWidth(iy + intervally / 2)),
+                    new XPoint(MillimeterToPointHeight(ix + intervallx), MillimeterToPointWidth(iy + intervally)));
+                gfx.DrawString(colsums[col].ToString(), fonttext, brush, curr, XStringFormats.Center);
+                if (ix + 2 * intervallx <= endx) ix += intervallx;
+                else
+                {
+                    if (iy + 2 * intervally <= endy) iy += intervally;
+                    else
+                    {
+                        gfx = NewPageLandscape(document);
+                        iy = 20;
+                    }
+                    ix = 50;
+                }
+                col++;
+            }
+            foreach(var v in variables)
+            {
+                curr = new XRect(
+                    new XPoint(MillimeterToPointHeight(ix), MillimeterToPointWidth(iy)),
+                    new XPoint(MillimeterToPointHeight(ix + intervallx), MillimeterToPointWidth(iy + intervally / 2)));
+                gfx.DrawString(v.Name, fonttext, brush, curr, XStringFormats.Center);
+                curr = new XRect(
+                    new XPoint(MillimeterToPointHeight(ix), MillimeterToPointWidth(iy + intervally / 2)),
+                    new XPoint(MillimeterToPointHeight(ix + intervallx), MillimeterToPointWidth(iy + intervally)));
+                gfx.DrawString(colsums[col].ToString(), fonttext, brush, curr, XStringFormats.Center);
+                if (ix + 2 * intervallx <= endx) ix += intervallx;
+                else
+                {
+                    if (iy + 2 * intervally <= endy) iy += intervally;
+                    else
+                    {
+                        gfx = NewPageLandscape(document);
+                        iy = 20;
+                    }
+                    ix = 50;
+                }
+                col++;
+            }
+            curr = new XRect(
+                    new XPoint(MillimeterToPointHeight(270), MillimeterToPointWidth(iy)),
+                    new XPoint(MillimeterToPointHeight(290), MillimeterToPointWidth(iy + intervally)));
+            gfx.DrawString(" " + colsums[colsums.Length - 1].ToString(), fonttext, brush, curr, XStringFormats.CenterLeft);
+
+            iy += intervally;
+            gfx.DrawLine(new XPen(XColors.Black),
+                    new XPoint(MillimeterToPointHeight(10), MillimeterToPointWidth(5)),
+                    new XPoint(MillimeterToPointHeight(10), MillimeterToPointWidth(iy)));
+            gfx.DrawLine(new XPen(XColors.Black),
+                    new XPoint(MillimeterToPointHeight(40), MillimeterToPointWidth(5)),
+                    new XPoint(MillimeterToPointHeight(40), MillimeterToPointWidth(iy)));
+            gfx.DrawLine(new XPen(XColors.Black),
+                    new XPoint(MillimeterToPointHeight(70), MillimeterToPointWidth(5)),
+                    new XPoint(MillimeterToPointHeight(70), MillimeterToPointWidth(iy)));
+            gfx.DrawLine(new XPen(XColors.Black),
+                    new XPoint(MillimeterToPointHeight(270), MillimeterToPointWidth(5)),
+                    new XPoint(MillimeterToPointHeight(270), MillimeterToPointWidth(iy)));
+
             document.Save(file);
             document.Close();
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(file) { UseShellExecute = true });
+        }
+
+        private static XGraphics NewPageLandscape(PdfDocument document)
+        {
+            var page = document.AddPage();
+            page.Size = PageSize.A4;
+            page.Orientation = PageOrientation.Landscape;
+            var gfx = XGraphics.FromPdfPage(page);
+            XRect curr = new XRect(
+                new XPoint(MillimeterToPointHeight(5), MillimeterToPointWidth(5)),
+                new XPoint(MillimeterToPointHeight(10), MillimeterToPointWidth(20)));
+            gfx.DrawString("Nr", fonttext, brush, curr, XStringFormats.CenterLeft);
+            curr = new XRect(
+                new XPoint(MillimeterToPointHeight(10), MillimeterToPointWidth(5)),
+                new XPoint(MillimeterToPointHeight(40), MillimeterToPointWidth(20)));
+            gfx.DrawString("Name", fonttext, brush, curr, XStringFormats.CenterLeft);
+            curr = new XRect(
+                new XPoint(MillimeterToPointHeight(40), MillimeterToPointWidth(5)),
+                new XPoint(MillimeterToPointHeight(70), MillimeterToPointWidth(20)));
+            gfx.DrawString("Vorname", fonttext, brush, curr, XStringFormats.CenterLeft);
+            curr = new XRect(
+                new XPoint(MillimeterToPointHeight(70), MillimeterToPointWidth(5)),
+                new XPoint(MillimeterToPointHeight(270), MillimeterToPointWidth(20)));
+            gfx.DrawString("Rechnungsposten", fonttext, brush, curr, XStringFormats.CenterLeft);
+            curr = new XRect(
+                new XPoint(MillimeterToPointHeight(270), MillimeterToPointWidth(5)),
+                new XPoint(MillimeterToPointHeight(290), MillimeterToPointWidth(20)));
+            gfx.DrawString("Summe", fonttext, brush, curr, XStringFormats.CenterLeft);
+            gfx.DrawLine(new XPen(XColors.Black),
+                new XPoint(MillimeterToPointHeight(5), MillimeterToPointWidth(20)),
+                new XPoint(MillimeterToPointHeight(290), MillimeterToPointWidth(20)));
+            return gfx;
+        }
+
+        private static (Variable v, decimal w) FindVariableInList(Variable v, List<(Variable v, decimal w)> variables)
+        {
+            foreach(var element in variables)
+            {
+                if(element.v == v) return element;
+            }
+            return (v, v.Default);
+        }
+        private static (Static s, bool b) FindStaticInList(Static s, List<(Static s, bool b)> statics)
+        {
+            foreach(var element in statics)
+            {
+                if (element.s == s) return element;
+            }
+            return (s, false);
         }
 
         private static double MillimeterToPointWidth(double mm)
