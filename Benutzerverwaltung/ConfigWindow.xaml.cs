@@ -1,6 +1,7 @@
 ﻿using Microsoft.SqlServer.Server;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -35,6 +36,8 @@ namespace Benutzerverwaltung
 
         List<TextBox> boxes;
         List<CheckBox> checkboxes;
+
+        static NumberFormatInfo nfi = new() { NumberDecimalSeparator = "." };
 
         public ConfigWindow(MainWindow _parent, int _id, View _view, Mode _mode, DataBaseConnection _dbc, List<Static> _statics, List<Variable> _variables, List<User> _users, User? _user)
         {
@@ -335,11 +338,11 @@ namespace Benutzerverwaltung
                 CreateTextBlock(GridStatics, s.Wert.ToString(), 2, row);
                 if (defaults is null)
                 {
-                    CreateCheckBox(GridStatics, "Aktivieren", string.Format("cbstatic{0}{1}", s.Id, s.Name), s.Default, 3, row);
+                    CreateCheckBox(GridStatics, "Aktivieren", string.Format("cbstatic{0}{1}", s.Id, s.Name.Replace(' ', '_')), s.Default, 3, row);
                 }
                 else
                 {
-                    CreateCheckBox(GridStatics, "Aktivieren", string.Format("cbstatic{0}{1}", s.Id, s.Name), FindStaticDefault(defaults, s), 3, row);
+                    CreateCheckBox(GridStatics, "Aktivieren", string.Format("cbstatic{0}{1}", s.Id, s.Name.Replace(' ', '_')), FindStaticDefault(defaults, s), 3, row);
                 }
                 row++;
             }
@@ -371,11 +374,11 @@ namespace Benutzerverwaltung
                 CreateTextBlock(GridVariables, v.Formel, 2, row);
                 if(defaults is null)
                 {
-                    CreateTextBox(GridVariables, v.Default.ToString(), string.Format("tbvariable{0}{1}", v.Id, v.Name), 3, row);
+                    CreateTextBox(GridVariables, v.Default.ToString(), string.Format("tbvariable{0}{1}", v.Id, v.Name.Replace(' ', '_')), 3, row);
                 }
                 else
                 {
-                    CreateTextBox(GridVariables, FindVariableDefault(defaults, v).ToString(), string.Format("tbvariable{0}{1}", v.Id, v.Name), 3, row);
+                    CreateTextBox(GridVariables, FindVariableDefault(defaults, v).ToString(), string.Format("tbvariable{0}{1}", v.Id, v.Name.Replace(' ', '_')), 3, row);
                 }
                 row++;
             }
@@ -567,7 +570,7 @@ namespace Benutzerverwaltung
         private bool ChangeUserVariable(int userid, int variableid, decimal value)
         {
             var err = dbc.CommandNonQuery(string.Format(
-                "UPDATE BenutzerVariable SET Wert={0} WHERE BID={1} AND VRPID={2};", 
+                "UPDATE BenutzerVariable SET Wert='{0}' WHERE BID={1} AND VRPID={2};", 
                 value, userid, variableid));
             if (err is not null) ErrorLogging.Log(err);
             else return true;
@@ -580,16 +583,16 @@ namespace Benutzerverwaltung
             else if (query.solution is not null && query.solution.Count > 0)
             {
                 var err = dbc.CommandNonQuery(string.Format(
-                    "INSERT INTO BenutzerVariable (BVID, BID, VRPID, Wert) VALUES((SELECT MAX(BSID) FROM BenutzerStatisch) + 1, {0}, {1}, {2});",
-                    userid, variableid, value));
+                    "INSERT INTO BenutzerVariable (BVID, BID, VRPID, Wert) VALUES((SELECT MAX(BSID) FROM BenutzerStatisch) + 1, {0}, {1}, '{2}');",
+                    userid, variableid, value.ToString(nfi)));
                 if (err is not null) ErrorLogging.Log(err);
                 else return true;
             }
             else
             {
                 var err = dbc.CommandNonQuery(string.Format(
-                    "INSERT INTO BenutzerVariable (BVID, BID, VRPID, Wert) VALUES(0, {0}, {1}, {2});",
-                    userid, variableid, value));
+                    "INSERT INTO BenutzerVariable (BVID, BID, VRPID, Wert) VALUES(0, {0}, {1}, '{2}');",
+                    userid, variableid, value.ToString(nfi)));
                 if (err is not null) ErrorLogging.Log(err);
                 else return true;
             }
@@ -635,8 +638,8 @@ namespace Benutzerverwaltung
             {
                 dbc.CommandNonQuery("BEGIN;");
                 var err = dbc.CommandNonQuery(string.Format(
-                    "UPDATE VariableRechnungsPosten SET Beschreibung='{0}', Formel='{1}', Def={2} WHERE VRPID={3};", 
-                    tbvariablename, tbvariableformel, StringToDecimal(tbvariabledefault), id));
+                    "UPDATE VariableRechnungsPosten SET Beschreibung='{0}', Formel='{1}', Def='{2}' WHERE VRPID={3};", 
+                    tbvariablename, tbvariableformel, StringToDecimal(tbvariabledefault).ToString(nfi), id));
                 if (err is not null)
                 {
                     dbc.CommandNonQuery("ROLLBACK;"); ErrorLogging.Log(err);
@@ -661,8 +664,8 @@ namespace Benutzerverwaltung
                 {
                     dbc.CommandNonQuery("BEGIN;");
                     var err = dbc.CommandNonQuery(string.Format(
-                        "INSERT INTO VariableRechnungsPosten (VRPID, Beschreibung, Formel, Def) VALUES((SELECT MAX(VRPID) FROM VariableRechnungsPosten) + 1, '{0}', '{1}', {2});",
-                         tbvariablename, StringToDecimal(tbvariableformel), tbvariabledefault));
+                        "INSERT INTO VariableRechnungsPosten (VRPID, Beschreibung, Formel, Def) VALUES((SELECT MAX(VRPID) FROM VariableRechnungsPosten) + 1, '{0}', '{1}', '{2}');",
+                         tbvariablename, tbvariableformel, StringToDecimal(tbvariabledefault).ToString(nfi)));
                     if (err is not null)
                     {
                         dbc.CommandNonQuery("ROLLBACK;"); ErrorLogging.Log(err);
@@ -686,7 +689,7 @@ namespace Benutzerverwaltung
                     dbc.CommandNonQuery("BEGIN;");
                     var err = dbc.CommandNonQuery(string.Format(
                         "INSERT INTO VariableRechnungsPosten (VRPID, Beschreibung, Formel, Def) VALUES(0, '{0}', '{1}', {2});",
-                         tbvariablename, StringToDecimal(tbvariableformel), tbvariabledefault));
+                         tbvariablename, StringToDecimal(tbvariableformel).ToString(nfi), tbvariabledefault));
                     if (err is not null)
                     {
                         dbc.CommandNonQuery("ROLLBACK;"); ErrorLogging.Log(err);
@@ -717,8 +720,8 @@ namespace Benutzerverwaltung
             {
                 dbc.CommandNonQuery("BEGIN;");
                 var err = dbc.CommandNonQuery(string.Format(
-                    "UPDATE StatischeRechnungsPosten SET Beschreibung='{0}', Wert={1}, Def={2} WHERE SRPID={3};", 
-                    tbstaticname, StringToDecimal(tbstaticwert), cbstaticdefault, id));
+                    "UPDATE StatischeRechnungsPosten SET Beschreibung='{0}', Wert='{1}', Def='{2}' WHERE SRPID={3};", 
+                    tbstaticname, StringToDecimal(tbstaticwert).ToString(nfi), cbstaticdefault, id));
                 if (err is not null)
                 {
                     dbc.CommandNonQuery("ROLLBACK;"); ErrorLogging.Log(err);
@@ -743,8 +746,8 @@ namespace Benutzerverwaltung
                 {
                     dbc.CommandNonQuery("BEGIN;");
                     var err = dbc.CommandNonQuery(string.Format(
-                        "INSERT INTO StatischeRechnungsPosten (SRPID, Beschreibung, Wert, Def) VALUES((SELECT MAX(SRPID) FROM StatischeRechnungsPosten) + 1, '{0}', {1}, {2});",
-                        tbstaticname, StringToDecimal(tbstaticwert), cbstaticdefault));
+                        "INSERT INTO StatischeRechnungsPosten (SRPID, Beschreibung, Wert, Def) VALUES((SELECT MAX(SRPID) FROM StatischeRechnungsPosten) + 1, '{0}', '{1}', '{2}');",
+                        tbstaticname, StringToDecimal(tbstaticwert).ToString(nfi), (bool)cbstaticdefault));
                     if (err is not null)
                     {
                         dbc.CommandNonQuery("ROLLBACK;"); ErrorLogging.Log(err);
@@ -768,7 +771,7 @@ namespace Benutzerverwaltung
                     dbc.CommandNonQuery("BEGIN;");
                     var err = dbc.CommandNonQuery(string.Format(
                         "INSERT INTO StatischeRechnungsPosten (SRPID, Beschreibung, Wert, Def) VALUES(0, '{0}', {1}, {2});",
-                        tbstaticname, StringToDecimal(tbstaticwert), cbstaticdefault));
+                        tbstaticname, StringToDecimal(tbstaticwert).ToString(nfi), (bool)cbstaticdefault));
                     if (err is not null)
                     {
                         dbc.CommandNonQuery("ROLLBACK;"); ErrorLogging.Log(err);
@@ -820,7 +823,7 @@ namespace Benutzerverwaltung
                 {
                     dbc.CommandNonQuery("BEGIN;");
                     var err = dbc.CommandNonQuery(string.Format(
-                        "INSERT INTO Jubilaeum (JID, Jahre) VALUES((SELECT MAX(JID) FROM Jubilaeum) + 1, {0});", 
+                        "INSERT INTO Jubilaeum (JID, Jahre) VALUES((SELECT MAX(JID) FROM Jubilaeum) + 1, '{0}');", 
                         tbjubwert));
                     if (err is not null)
                     {
@@ -880,7 +883,7 @@ namespace Benutzerverwaltung
                 {
                     foreach(var s in statics)
                     {
-                        var cbstatic = SearchCheckBoxes(string.Format("cbstatic{0}{1}", s.Id, s.Name));
+                        var cbstatic = SearchCheckBoxes(string.Format("cbstatic{0}{1}", s.Id, s.Name.Replace(' ', '_')));
                         if (cbstatic is not null)
                         {
                             var error = ChangeUserStatic(id, s.Id, (bool)cbstatic);
@@ -895,7 +898,7 @@ namespace Benutzerverwaltung
 
                     foreach(var v in variables)
                     {
-                        var tbvariable = SearchTextBoxes(string.Format("tbvariable{0}{1}", v.Id, v.Name));
+                        var tbvariable = SearchTextBoxes(string.Format("tbvariable{0}{1}", v.Id, v.Name.Replace(' ', '_')));
                         if (tbvariable is not null)
                         {
                             var error = ChangeUserVariable(id, v.Id, StringToDecimal(tbvariable));
@@ -951,7 +954,7 @@ namespace Benutzerverwaltung
                     {
                         foreach (var s in statics)
                         {
-                            var cbstatic = SearchCheckBoxes(string.Format("cbstatic{0}{1}", s.Id, s.Name));
+                            var cbstatic = SearchCheckBoxes(string.Format("cbstatic{0}{1}", s.Id, s.Name.Replace(' ', '_')));
                             if (cbstatic is not null)
                             {
                                 var error = CreateUserStatic(id, s.Id, (bool)cbstatic);
@@ -969,7 +972,7 @@ namespace Benutzerverwaltung
 
                         foreach (var v in variables)
                         {
-                            var tbvariable = SearchTextBoxes(string.Format("tbvariable{0}{1}", v.Id, v.Name));
+                            var tbvariable = SearchTextBoxes(string.Format("tbvariable{0}{1}", v.Id, v.Name.Replace(' ', '_')));
                             if (tbvariable is not null)
                             {
                                 var error = CreateUserVariable(id, v.Id, StringToDecimal(tbvariable));
@@ -999,7 +1002,7 @@ namespace Benutzerverwaltung
                     {
                         foreach (var s in statics)
                         {
-                            var cbstatic = SearchCheckBoxes(string.Format("cbstatic{0}{1}", s.Id, s.Name));
+                            var cbstatic = SearchCheckBoxes(string.Format("cbstatic{0}{1}", s.Id, s.Name.Replace(' ', '_')));
                             if (cbstatic is not null)
                             {
                                 var error = CreateUserStatic(id, s.Id, (bool)cbstatic);
@@ -1017,7 +1020,7 @@ namespace Benutzerverwaltung
 
                         foreach (var v in variables)
                         {
-                            var tbvariable = SearchTextBoxes(string.Format("tbvariable{0}{1}", v.Id, v.Name));
+                            var tbvariable = SearchTextBoxes(string.Format("tbvariable{0}{1}", v.Id, v.Name.Replace(' ', '_')));
                             if (tbvariable is not null)
                             {
                                 var error = CreateUserVariable(id, v.Id, StringToDecimal(tbvariable));
