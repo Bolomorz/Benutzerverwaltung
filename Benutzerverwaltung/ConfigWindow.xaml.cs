@@ -567,10 +567,20 @@ namespace Benutzerverwaltung
             }
         }
 
+        private int NextId(List<List<object>> list)
+        {
+            int max = int.MinValue;
+            foreach(var item in list)
+            {
+                int i = (int)item[0];
+                if (i > max) max = i;
+            }
+            return max + 1;
+        }
         private bool ChangeUserVariable(int userid, int variableid, decimal value)
         {
             var err = dbc.CommandNonQuery(string.Format(
-                "UPDATE BenutzerVariable SET Wert='{0}' WHERE BID={1} AND VRPID={2};", 
+                "UPDATE BenutzerVariable SET Wert='{0}' WHERE BID='{1}' AND VRPID='{2}';", 
                 value, userid, variableid));
             if (err is not null) ErrorLogging.Log(err);
             else return true;
@@ -583,7 +593,7 @@ namespace Benutzerverwaltung
             else if (query.solution is not null && query.solution.Count > 0)
             {
                 var err = dbc.CommandNonQuery(string.Format(
-                    "INSERT INTO BenutzerVariable (BVID, BID, VRPID, Wert) VALUES((SELECT MAX(BSID) FROM BenutzerStatisch) + 1, {0}, {1}, '{2}');",
+                    "INSERT INTO BenutzerVariable (BVID, BID, VRPID, Wert) VALUES((SELECT MAX(BSID) FROM BenutzerStatisch) + 1, '{0}', '{1}', '{2}');",
                     userid, variableid, value.ToString(nfi)));
                 if (err is not null) ErrorLogging.Log(err);
                 else return true;
@@ -591,7 +601,7 @@ namespace Benutzerverwaltung
             else
             {
                 var err = dbc.CommandNonQuery(string.Format(
-                    "INSERT INTO BenutzerVariable (BVID, BID, VRPID, Wert) VALUES(0, {0}, {1}, '{2}');",
+                    "INSERT INTO BenutzerVariable (BVID, BID, VRPID, Wert) VALUES(0, '{0}', '{1}', '{2}');",
                     userid, variableid, value.ToString(nfi)));
                 if (err is not null) ErrorLogging.Log(err);
                 else return true;
@@ -601,7 +611,7 @@ namespace Benutzerverwaltung
         private bool ChangeUserStatic(int userid, int staticid, bool value)
         {
             var err = dbc.CommandNonQuery(string.Format(
-                "UPDATE BenutzerStatisch SET Aktiv={0} WHERE BID={1} AND SRPID={2};", 
+                "UPDATE BenutzerStatisch SET Aktiv={0} WHERE BID='{1}' AND SRPID='{2}';", 
                 value, userid, staticid));
             if (err is not null) ErrorLogging.Log(err);
             else return true;
@@ -614,7 +624,7 @@ namespace Benutzerverwaltung
             else if(query.solution is not null && query.solution.Count > 0)
             {
                 var err = dbc.CommandNonQuery(string.Format(
-                    "INSERT INTO BenutzerStatisch (BSID, BID, SRPID, Aktiv) VALUES((SELECT MAX(BSID) FROM BenutzerStatisch) + 1, {0}, {1}, {2});", 
+                    "INSERT INTO BenutzerStatisch (BSID, BID, SRPID, Aktiv) VALUES((SELECT MAX(BSID) FROM BenutzerStatisch) + 1, '{0}', '{1}', {2});", 
                     userid, staticid, value));
                 if (err is not null) ErrorLogging.Log(err);
                 else return true;
@@ -622,7 +632,7 @@ namespace Benutzerverwaltung
             else
             {
                 var err = dbc.CommandNonQuery(string.Format(
-                    "INSERT INTO BenutzerStatisch (BSID, BID, SRPID, Aktiv) VALUES(0, {0}, {1}, {2});",
+                    "INSERT INTO BenutzerStatisch (BSID, BID, SRPID, Aktiv) VALUES(0, '{0}', '{1}', {2});",
                     userid, staticid, value));
                 if (err is not null) ErrorLogging.Log(err);
                 else return true;
@@ -663,9 +673,10 @@ namespace Benutzerverwaltung
                 else if (query.solution is not null && query.solution.Count > 0)
                 {
                     dbc.CommandNonQuery("BEGIN;");
+                    id = NextId(query.solution);
                     var err = dbc.CommandNonQuery(string.Format(
-                        "INSERT INTO VariableRechnungsPosten (VRPID, Beschreibung, Formel, Def) VALUES((SELECT MAX(VRPID) FROM VariableRechnungsPosten) + 1, '{0}', '{1}', '{2}');",
-                         tbvariablename, tbvariableformel, StringToDecimal(tbvariabledefault).ToString(nfi)));
+                        "INSERT INTO VariableRechnungsPosten (VRPID, Beschreibung, Formel, Def) VALUES('{3}', '{0}', '{1}', '{2}');",
+                         tbvariablename, tbvariableformel, StringToDecimal(tbvariabledefault).ToString(nfi), id));
                     if (err is not null)
                     {
                         dbc.CommandNonQuery("ROLLBACK;"); ErrorLogging.Log(err);
@@ -687,6 +698,7 @@ namespace Benutzerverwaltung
                 else
                 {
                     dbc.CommandNonQuery("BEGIN;");
+                    id = 0;
                     var err = dbc.CommandNonQuery(string.Format(
                         "INSERT INTO VariableRechnungsPosten (VRPID, Beschreibung, Formel, Def) VALUES(0, '{0}', '{1}', {2});",
                          tbvariablename, StringToDecimal(tbvariableformel).ToString(nfi), tbvariabledefault));
@@ -745,9 +757,10 @@ namespace Benutzerverwaltung
                 else if(query.solution is not null && query.solution.Count > 0) 
                 {
                     dbc.CommandNonQuery("BEGIN;");
+                    id = NextId(query.solution);
                     var err = dbc.CommandNonQuery(string.Format(
-                        "INSERT INTO StatischeRechnungsPosten (SRPID, Beschreibung, Wert, Def) VALUES((SELECT MAX(SRPID) FROM StatischeRechnungsPosten) + 1, '{0}', '{1}', '{2}');",
-                        tbstaticname, StringToDecimal(tbstaticwert).ToString(nfi), (bool)cbstaticdefault));
+                        "INSERT INTO StatischeRechnungsPosten (SRPID, Beschreibung, Wert, Def) VALUES('{3}', '{0}', '{1}', '{2}');",
+                        tbstaticname, StringToDecimal(tbstaticwert).ToString(nfi), (bool)cbstaticdefault, id));
                     if (err is not null)
                     {
                         dbc.CommandNonQuery("ROLLBACK;"); ErrorLogging.Log(err);
@@ -769,6 +782,7 @@ namespace Benutzerverwaltung
                 else
                 {
                     dbc.CommandNonQuery("BEGIN;");
+                    id = 0;
                     var err = dbc.CommandNonQuery(string.Format(
                         "INSERT INTO StatischeRechnungsPosten (SRPID, Beschreibung, Wert, Def) VALUES(0, '{0}', {1}, {2});",
                         tbstaticname, StringToDecimal(tbstaticwert).ToString(nfi), (bool)cbstaticdefault));
@@ -946,9 +960,10 @@ namespace Benutzerverwaltung
                 else if (query.solution is not null && query.solution.Count > 0)
                 {
                     dbc.CommandNonQuery("BEGIN;");
+                    id = NextId(query.solution);
                     var err = dbc.CommandNonQuery(string.Format(
-                        "INSERT INTO Benutzer (BID, Name, Vorname, Strasse, PLZ, Ort, Geburtsdatum, Eintrittsdatum) VALUES((SELECT MAX(BID) FROM Benutzer) + 1, '{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}');",
-                        tbusername, tbuservorname, tbuserstrasse, StringToInt(tbuserplz), tbuserort, StringToDate(tbusergeburtsdatum).ToString(), StringToDate(tbusereintrittsdatum).ToString()));
+                        "INSERT INTO Benutzer (BID, Name, Vorname, Strasse, PLZ, Ort, Geburtsdatum, Eintrittsdatum) VALUES('{7}', '{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}');",
+                        tbusername, tbuservorname, tbuserstrasse, StringToInt(tbuserplz), tbuserort, StringToDate(tbusergeburtsdatum).ToString(), StringToDate(tbusereintrittsdatum).ToString(), id));
                     if (err is not null) ErrorLogging.Log(err);
                     else
                     {
@@ -994,6 +1009,7 @@ namespace Benutzerverwaltung
                 else
                 {
                     dbc.CommandNonQuery("BEGIN;");
+                    id = 0;
                     var err = dbc.CommandNonQuery(string.Format(
                         "INSERT INTO Benutzer (BID, Name, Vorname, Strasse, PLZ, Ort, Geburtsdatum, Eintrittsdatum) VALUES(0, '{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}');",
                         tbusername, tbuservorname, tbuserstrasse, StringToInt(tbuserplz), tbuserort, StringToDate(tbusergeburtsdatum).ToString(), StringToDate(tbusereintrittsdatum).ToString()));

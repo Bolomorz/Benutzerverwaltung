@@ -105,7 +105,8 @@ namespace Benutzerverwaltung
                                     PLZ int NOT NULL,
                                     Ort varchar(255) NOT NULL,
                                     Geburtsdatum varchar(10) NOT NULL,
-                                    Eintrittsdatum varchar(10) NOT NULL);",
+                                    Eintrittsdatum varchar(10) NOT NULL,
+                                    Bezahlt decimal(10, 2) NOT NULL);",
 
                     @"CREATE TABLE IF NOT EXISTS StatischeRechnungsPosten(
                                     SRPID int PRIMARY KEY NOT NULL,
@@ -157,6 +158,7 @@ namespace Benutzerverwaltung
         {
             try
             {
+                ErrorLogging.LogSql(sql);
                 using (var con = new SQLiteConnection(connection))
                 {
                     con.Open();
@@ -178,7 +180,8 @@ namespace Benutzerverwaltung
         {
             try
             {
-                using(var con = new SQLiteConnection(connection))
+                ErrorLogging.LogSql(sql);
+                using (var con = new SQLiteConnection(connection))
                 {
                     con.Open();
                     DataTable sol = new();
@@ -201,6 +204,7 @@ namespace Benutzerverwaltung
         {
             try
             {
+                ErrorLogging.LogSql(sql);
                 using (var con = new SQLiteConnection(connection))
                 {
                     con.Open();

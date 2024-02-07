@@ -12,8 +12,15 @@ namespace Benutzerverwaltung
         public static void Log(string message)
         {
             DateTime now = DateTime.Now;
-            List<string> errors = new List<string>() { string.Format("{0}:\n {1}", now, message), "----------", "", "----------"};
-            File.AppendAllLines("errorlog.txt", errors);
+            List<string> lines = new List<string>() { string.Format("{0}:\n{1}", now, message), "----------", "", "----------"};
+            File.AppendAllLines("errorlog.txt", lines);
+        }
+
+        public static void LogSql(string sql)
+        {
+            DateTime now = DateTime.Now;
+            List<string> lines = new List<string>() { string.Format("{0}:\n{1}", now, sql), "----------", "", "----------" };
+            File.AppendAllLines("sqllog.txt", lines);
         }
     }
 }

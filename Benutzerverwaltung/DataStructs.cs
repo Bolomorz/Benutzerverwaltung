@@ -19,10 +19,11 @@ namespace Benutzerverwaltung
         public string Ort;
         public DataBaseConnection.Date Geburtstag;
         public DataBaseConnection.Date Eintrittsdatum;
+        public decimal Bezahlt;
         public List<(Static s, bool b)> statics;
         public List<(Variable v, decimal w)> variables;
 
-        public User(int id, string name, string vorname, string strasse, int plz, string ort, DataBaseConnection.Date geburtstag, DataBaseConnection.Date eintrittsdatum) 
+        public User(int id, string name, string vorname, string strasse, int plz, string ort, DataBaseConnection.Date geburtstag, DataBaseConnection.Date eintrittsdatum, decimal bezahlt) 
         {
             this.Id = id;
             this.Name = name;
@@ -32,6 +33,7 @@ namespace Benutzerverwaltung
             this.Ort = ort;
             this.Geburtstag = geburtstag;
             this.Eintrittsdatum = eintrittsdatum;
+            this.Bezahlt = bezahlt;
             this.statics = new List<(Static s, bool b)>();
             this.variables = new List<(Variable v, decimal w)>();
         }
