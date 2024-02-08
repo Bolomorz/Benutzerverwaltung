@@ -38,27 +38,27 @@ namespace Benutzerverwaltung
                 //0123-56-89
                 //01-34-6789
                 if (date.Length != 10) throw new Exception(string.Format("cannot convert string {0} to date!", date));
-                if (!ConfigWindow.IsNumeric(date[4]) && !ConfigWindow.IsNumeric(date[7])
-                    && ConfigWindow.IsNumeric(date[0]) && ConfigWindow.IsNumeric(date[1]) && ConfigWindow.IsNumeric(date[2]) && ConfigWindow.IsNumeric(date[3])
-                    && ConfigWindow.IsNumeric(date[5]) && ConfigWindow.IsNumeric(date[6]) && ConfigWindow.IsNumeric(date[8]) && ConfigWindow.IsNumeric(date[9]))
+                if (!Convert.IsNumeric(date[4]) && !Convert.IsNumeric(date[7])
+                    && Convert.IsNumeric(date[0]) && Convert.IsNumeric(date[1]) && Convert.IsNumeric(date[2]) && Convert.IsNumeric(date[3])
+                    && Convert.IsNumeric(date[5]) && Convert.IsNumeric(date[6]) && Convert.IsNumeric(date[8]) && Convert.IsNumeric(date[9]))
                 {
                     string y = date[0].ToString() + date[1].ToString() + date[2].ToString() + date[3].ToString();
                     string m = date[5].ToString() + date[6].ToString();
                     string d = date[8].ToString() + date[9].ToString();
-                    year = Convert.ToInt32(y);
-                    month = Convert.ToInt32(m);
-                    day = Convert.ToInt32(d);
+                    year = Convert.StringToInt(y);
+                    month = Convert.StringToInt(m);
+                    day = Convert.StringToInt(d);
                 }
-                else if(!ConfigWindow.IsNumeric(date[2]) && !ConfigWindow.IsNumeric(date[5])
-                    && ConfigWindow.IsNumeric(date[0]) && ConfigWindow.IsNumeric(date[1]) && ConfigWindow.IsNumeric(date[3]) && ConfigWindow.IsNumeric(date[4])
-                    && ConfigWindow.IsNumeric(date[6]) && ConfigWindow.IsNumeric(date[7]) && ConfigWindow.IsNumeric(date[8]) && ConfigWindow.IsNumeric(date[9]))
+                else if(!Convert.IsNumeric(date[2]) && !Convert.IsNumeric(date[5])
+                    && Convert.IsNumeric(date[0]) && Convert.IsNumeric(date[1]) && Convert.IsNumeric(date[3]) && Convert.IsNumeric(date[4])
+                    && Convert.IsNumeric(date[6]) && Convert.IsNumeric(date[7]) && Convert.IsNumeric(date[8]) && Convert.IsNumeric(date[9]))
                 {
                     string y = date[6].ToString() + date[7].ToString() + date[8].ToString() + date[9].ToString();
                     string m = date[3].ToString() + date[4].ToString();
                     string d = date[0].ToString() + date[1].ToString();
-                    year = Convert.ToInt32(y);
-                    month = Convert.ToInt32(m);
-                    day = Convert.ToInt32(d);
+                    year = Convert.StringToInt(y);
+                    month = Convert.StringToInt(m);
+                    day = Convert.StringToInt(d);
                 }
                 else
                 {

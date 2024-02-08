@@ -37,7 +37,7 @@ namespace Benutzerverwaltung
         List<TextBox> boxes;
         List<CheckBox> checkboxes;
 
-        static NumberFormatInfo nfi = new() { NumberDecimalSeparator = "." };
+        public static NumberFormatInfo nfi = new() { NumberDecimalSeparator = "." };
 
         public ConfigWindow(MainWindow _parent, int _id, View _view, Mode _mode, DataBaseConnection _dbc, List<Static> _statics, List<Variable> _variables, List<User> _users, User? _user)
         {
@@ -55,55 +55,11 @@ namespace Benutzerverwaltung
             this.variables = _variables;
             this.users = _users;
             this.user = _user;
+            TBView.FontFamily = new FontFamily(Settings.Default.FontFamily);
+            TBView.FontSize = Settings.Default.FontSize;
+            BTAbbrechen.FontSize = Settings.Default.FontSize;
+            BTAbbrechen.FontFamily = new FontFamily(Settings.Default.FontFamily);
             CreateControls();
-        }
-
-        private static DataBaseConnection.Date StringToDate(string input)
-        {
-            try
-            {
-                return new DataBaseConnection.Date(input);
-            }
-            catch (Exception e)
-            {
-                ErrorLogging.Log(e.ToString());
-                return new DataBaseConnection.Date() { day = 77, month = 77, year = 7777 };
-            }
-        }
-        private static decimal StringToDecimal(string input)
-        {
-            string newval = "";
-
-            foreach (var c in input)
-            {
-                if (IsNumeric(c))
-                {
-                    newval += c;
-                }
-                else if (c == ',' || c == '.')
-                {
-                    newval += System.Globalization.NumberFormatInfo.CurrentInfo.NumberDecimalSeparator;
-                }
-            }
-
-            if (newval != "")
-            {
-                return decimal.Parse(newval, System.Globalization.NumberStyles.AllowDecimalPoint);
-            }
-            else
-            {
-                return 0;
-            }
-        }
-        private static int StringToInt(string input)
-        {
-            string output = "";
-            foreach(var c in input) if(IsNumeric(c)) output += c;
-            return int.Parse(output);
-        }
-        public static bool IsNumeric(char input)
-        {
-            if (input == '0' || input == '1' || input == '2' || input == '3' || input == '4' || input == '5' || input == '6' || input == '7' || input == '8' || input == '9') return true; else return false;
         }
 
         private void CreateControls()
@@ -175,8 +131,8 @@ namespace Benutzerverwaltung
             ControlsGrid.Children.Clear();
             ControlsGrid.RowDefinitions.Clear();
 
-            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //0Wert
-            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightShort, GridUnitType.Pixel) });       //0Wert
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightShort, GridUnitType.Pixel) });
 
             CreateTextBlock(ControlsGrid, "Jahre", 0, 0);
 
@@ -200,10 +156,10 @@ namespace Benutzerverwaltung
             ControlsGrid.Children.Clear();
             ControlsGrid.RowDefinitions.Clear();
 
-            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //0Name
-            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //1Wert
-            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //2Default
-            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightShort, GridUnitType.Pixel) });       //0Name
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightShort, GridUnitType.Pixel) });       //1Wert
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightShort, GridUnitType.Pixel) });       //2Default
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightShort, GridUnitType.Pixel) });
 
             CreateTextBlock(ControlsGrid, "Name", 0, 0);
             CreateTextBlock(ControlsGrid, "Wert", 0, 1);
@@ -233,11 +189,11 @@ namespace Benutzerverwaltung
             ControlsGrid.Children.Clear();
             ControlsGrid.RowDefinitions.Clear();
 
-            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //0Name
-            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //1Formel
-            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //2Default
-            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(100, GridUnitType.Pixel) });
-            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightShort, GridUnitType.Pixel) });       //0Name
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightShort, GridUnitType.Pixel) });       //1Formel
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightShort, GridUnitType.Pixel) });       //2Default
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightMedium, GridUnitType.Pixel) });
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightShort, GridUnitType.Pixel) });
 
             CreateTextBlock(ControlsGrid, "Name", 0, 0);
             CreateTextBlock(ControlsGrid, "Formel", 0, 1);
@@ -270,16 +226,16 @@ namespace Benutzerverwaltung
             ControlsGrid.Children.Clear();
             ControlsGrid.RowDefinitions.Clear();
 
-            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //0Name
-            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //1Vorname
-            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //2Strasse
-            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //3PLZ
-            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //4Ort
-            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //5Geburtsdatum
-            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //6Eintrittsdatum
-            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(150, GridUnitType.Pixel) });      //7Statics
-            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(150, GridUnitType.Pixel) });      //8Variables
-            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });       //9AcceptButton
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightShort, GridUnitType.Pixel) });       //0Name
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightShort, GridUnitType.Pixel) });       //1Vorname
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightShort, GridUnitType.Pixel) });       //2Strasse
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightShort, GridUnitType.Pixel) });       //3PLZ
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightShort, GridUnitType.Pixel) });       //4Ort
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightShort, GridUnitType.Pixel) });       //5Geburtsdatum
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightShort, GridUnitType.Pixel) });       //6Eintrittsdatum
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightLong, GridUnitType.Pixel) });      //7Statics
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightLong, GridUnitType.Pixel) });      //8Variables
+            ControlsGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightShort, GridUnitType.Pixel) });       //9AcceptButton
 
             CreateTextBlock(ControlsGrid, "Name", 0, 0); CreateTextBlock(ControlsGrid, "Vorname", 0, 1); CreateTextBlock(ControlsGrid, "Strasse", 0, 2); 
             CreateTextBlock(ControlsGrid, "PLZ", 0, 3); CreateTextBlock(ControlsGrid, "Ort", 0, 4);
@@ -327,7 +283,7 @@ namespace Benutzerverwaltung
             GridStatics.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });         //Wert
             GridStatics.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });         //Checkbox
 
-            for(int i = 0; i < statics.Count + 2; i++) GridStatics.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });
+            for(int i = 0; i < statics.Count + 2; i++) GridStatics.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightShort, GridUnitType.Pixel) });
 
             CreateTextBlock(GridStatics, "ID", 0, 0); CreateTextBlock(GridStatics, "Name", 1, 0); CreateTextBlock(GridStatics, "Wert", 2, 0); CreateTextBlock(GridStatics, "Aktivieren", 3, 0);
             int row = 1;
@@ -363,7 +319,7 @@ namespace Benutzerverwaltung
             GridVariables.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });         //Formel
             GridVariables.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(2, GridUnitType.Star) });         //TextBox
 
-            for (int i = 0; i < variables.Count + 2; i++) GridVariables.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });
+            for (int i = 0; i < variables.Count + 2; i++) GridVariables.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightShort, GridUnitType.Pixel) });
 
             CreateTextBlock(GridVariables, "ID", 0, 0); CreateTextBlock(GridVariables, "Name", 1, 0); CreateTextBlock(GridVariables, "Formel", 2, 0); CreateTextBlock(GridVariables, "Wert", 3, 0);
             int row = 1;
@@ -416,7 +372,9 @@ namespace Benutzerverwaltung
                 Margin = new Thickness(5),
                 Content = text,
                 Background = (mode == Mode.CreateNew) ? CreateBackground : AdminBackground,
-                Foreground = (mode == Mode.CreateNew) ? CreateForeground : AdminForeground
+                Foreground = (mode == Mode.CreateNew) ? CreateForeground : AdminForeground,
+                FontFamily = new FontFamily(Settings.Default.FontFamily),
+                FontSize = Settings.Default.FontSize,
             };
             bt.Click += ClickAccept;
             Border bd = new Border()
@@ -439,7 +397,9 @@ namespace Benutzerverwaltung
             {
                 Margin = new Thickness(5),
                 Text = text,
-                ToolTip = tooltip
+                ToolTip = tooltip,
+                FontFamily = new FontFamily(Settings.Default.FontFamily),
+                FontSize = Settings.Default.FontSize,
             };
             Border bd = new Border()
             {
@@ -462,7 +422,9 @@ namespace Benutzerverwaltung
                 Margin = new Thickness(5),
                 Text = text,
                 Name = name,
-                MinWidth = 50
+                MinWidth = 50,
+                FontFamily = new FontFamily(Settings.Default.FontFamily),
+                FontSize = Settings.Default.FontSize,
             };
             Border bd = new Border()
             {
@@ -486,7 +448,9 @@ namespace Benutzerverwaltung
                 Margin = new Thickness(5),
                 Content = text,
                 Name = name,
-                IsChecked = ischecked
+                IsChecked = ischecked,
+                FontFamily = new FontFamily(Settings.Default.FontFamily),
+                FontSize = Settings.Default.FontSize,
             };
             Border bd = new Border()
             {
@@ -649,7 +613,7 @@ namespace Benutzerverwaltung
                 dbc.CommandNonQuery("BEGIN;");
                 var err = dbc.CommandNonQuery(string.Format(
                     "UPDATE VariableRechnungsPosten SET Beschreibung='{0}', Formel='{1}', Def='{2}' WHERE VRPID={3};", 
-                    tbvariablename, tbvariableformel, StringToDecimal(tbvariabledefault).ToString(nfi), id));
+                    tbvariablename, tbvariableformel, Convert.StringToDecimal(tbvariabledefault).ToString(nfi), id));
                 if (err is not null)
                 {
                     dbc.CommandNonQuery("ROLLBACK;"); ErrorLogging.Log(err);
@@ -676,7 +640,7 @@ namespace Benutzerverwaltung
                     id = NextId(query.solution);
                     var err = dbc.CommandNonQuery(string.Format(
                         "INSERT INTO VariableRechnungsPosten (VRPID, Beschreibung, Formel, Def) VALUES('{3}', '{0}', '{1}', '{2}');",
-                         tbvariablename, tbvariableformel, StringToDecimal(tbvariabledefault).ToString(nfi), id));
+                         tbvariablename, tbvariableformel, Convert.StringToDecimal(tbvariabledefault).ToString(nfi), id));
                     if (err is not null)
                     {
                         dbc.CommandNonQuery("ROLLBACK;"); ErrorLogging.Log(err);
@@ -685,7 +649,7 @@ namespace Benutzerverwaltung
                     {
                         foreach (var u in users)
                         {
-                            var error = CreateUserVariable(u.Id, id, StringToDecimal(tbvariabledefault));
+                            var error = CreateUserVariable(u.Id, id, Convert.StringToDecimal(tbvariabledefault));
                             if (!error)
                             {
                                 dbc.CommandNonQuery("ROLLBACK;"); return ("Variablen Posten erstellen", false);
@@ -701,7 +665,7 @@ namespace Benutzerverwaltung
                     id = 0;
                     var err = dbc.CommandNonQuery(string.Format(
                         "INSERT INTO VariableRechnungsPosten (VRPID, Beschreibung, Formel, Def) VALUES(0, '{0}', '{1}', {2});",
-                         tbvariablename, StringToDecimal(tbvariableformel).ToString(nfi), tbvariabledefault));
+                         tbvariablename, Convert.StringToDecimal(tbvariableformel).ToString(nfi), tbvariabledefault));
                     if (err is not null)
                     {
                         dbc.CommandNonQuery("ROLLBACK;"); ErrorLogging.Log(err);
@@ -710,7 +674,7 @@ namespace Benutzerverwaltung
                     {
                         foreach (var u in users)
                         {
-                            var error = CreateUserVariable(u.Id, id, StringToDecimal(tbvariabledefault));
+                            var error = CreateUserVariable(u.Id, id, Convert.StringToDecimal(tbvariabledefault));
                             if (!error)
                             {
                                 dbc.CommandNonQuery("ROLLBACK;"); return ("Variablen Posten erstellen", false);
@@ -733,7 +697,7 @@ namespace Benutzerverwaltung
                 dbc.CommandNonQuery("BEGIN;");
                 var err = dbc.CommandNonQuery(string.Format(
                     "UPDATE StatischeRechnungsPosten SET Beschreibung='{0}', Wert='{1}', Def='{2}' WHERE SRPID={3};", 
-                    tbstaticname, StringToDecimal(tbstaticwert).ToString(nfi), cbstaticdefault, id));
+                    tbstaticname, Convert.StringToDecimal(tbstaticwert).ToString(nfi), cbstaticdefault, id));
                 if (err is not null)
                 {
                     dbc.CommandNonQuery("ROLLBACK;"); ErrorLogging.Log(err);
@@ -760,7 +724,7 @@ namespace Benutzerverwaltung
                     id = NextId(query.solution);
                     var err = dbc.CommandNonQuery(string.Format(
                         "INSERT INTO StatischeRechnungsPosten (SRPID, Beschreibung, Wert, Def) VALUES('{3}', '{0}', '{1}', '{2}');",
-                        tbstaticname, StringToDecimal(tbstaticwert).ToString(nfi), (bool)cbstaticdefault, id));
+                        tbstaticname, Convert.StringToDecimal(tbstaticwert).ToString(nfi), (bool)cbstaticdefault, id));
                     if (err is not null)
                     {
                         dbc.CommandNonQuery("ROLLBACK;"); ErrorLogging.Log(err);
@@ -785,7 +749,7 @@ namespace Benutzerverwaltung
                     id = 0;
                     var err = dbc.CommandNonQuery(string.Format(
                         "INSERT INTO StatischeRechnungsPosten (SRPID, Beschreibung, Wert, Def) VALUES(0, '{0}', {1}, {2});",
-                        tbstaticname, StringToDecimal(tbstaticwert).ToString(nfi), (bool)cbstaticdefault));
+                        tbstaticname, Convert.StringToDecimal(tbstaticwert).ToString(nfi), (bool)cbstaticdefault));
                     if (err is not null)
                     {
                         dbc.CommandNonQuery("ROLLBACK;"); ErrorLogging.Log(err);
@@ -813,8 +777,8 @@ namespace Benutzerverwaltung
             if (tbjubwert is not null) {
                 dbc.CommandNonQuery("BEGIN;");
                 var err = dbc.CommandNonQuery(string.Format(
-                    "UPDATE Jubilaeum SET Jahre={0} WHERE JID={1};", 
-                    StringToInt(tbjubwert), id));
+                    "UPDATE Jubilaeum SET Jahre={0} WHERE JID={1};",
+                    Convert.StringToInt(tbjubwert), id));
                 if (err is not null)
                 {
                     dbc.CommandNonQuery("ROLLBACK;"); ErrorLogging.Log(err);
@@ -891,7 +855,7 @@ namespace Benutzerverwaltung
                 dbc.CommandNonQuery("BEGIN;");
                 var err = dbc.CommandNonQuery(string.Format(
                     "UPDATE Benutzer SET Name='{0}', Vorname='{1}', Strasse='{2}', PLZ={3}, Ort='{4}', Geburtsdatum='{5}', Eintrittsdatum='{6}' WHERE BID={7};",
-                    tbusername, tbuservorname, tbuserstrasse, StringToInt(tbuserplz), tbuserort, StringToDate(tbusergeburtsdatum).ToString(), StringToDate(tbusereintrittsdatum).ToString(), id));
+                    tbusername, tbuservorname, tbuserstrasse, Convert.StringToInt(tbuserplz), tbuserort, Convert.StringToDate(tbusergeburtsdatum).ToString(), Convert.StringToDate(tbusereintrittsdatum).ToString(), id));
                 if (err is not null) ErrorLogging.Log(err);
                 else
                 {
@@ -915,7 +879,7 @@ namespace Benutzerverwaltung
                         var tbvariable = SearchTextBoxes(string.Format("tbvariable{0}{1}", v.Id, v.Name.Replace(' ', '_')));
                         if (tbvariable is not null)
                         {
-                            var error = ChangeUserVariable(id, v.Id, StringToDecimal(tbvariable));
+                            var error = ChangeUserVariable(id, v.Id, Convert.StringToDecimal(tbvariable));
                             if (!error)
                             {
                                 dbc.CommandNonQuery("ROLLBACK;");
@@ -962,8 +926,8 @@ namespace Benutzerverwaltung
                     dbc.CommandNonQuery("BEGIN;");
                     id = NextId(query.solution);
                     var err = dbc.CommandNonQuery(string.Format(
-                        "INSERT INTO Benutzer (BID, Name, Vorname, Strasse, PLZ, Ort, Geburtsdatum, Eintrittsdatum) VALUES('{7}', '{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}');",
-                        tbusername, tbuservorname, tbuserstrasse, StringToInt(tbuserplz), tbuserort, StringToDate(tbusergeburtsdatum).ToString(), StringToDate(tbusereintrittsdatum).ToString(), id));
+                        "INSERT INTO Benutzer (BID, Name, Vorname, Strasse, PLZ, Ort, Geburtsdatum, Eintrittsdatum, Bezahlt) VALUES('{7}', '{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}', 0);",
+                        tbusername, tbuservorname, tbuserstrasse, Convert.StringToInt(tbuserplz), tbuserort, Convert.StringToDate(tbusergeburtsdatum).ToString(), Convert.StringToDate(tbusereintrittsdatum).ToString(), id));
                     if (err is not null) ErrorLogging.Log(err);
                     else
                     {
@@ -990,7 +954,7 @@ namespace Benutzerverwaltung
                             var tbvariable = SearchTextBoxes(string.Format("tbvariable{0}{1}", v.Id, v.Name.Replace(' ', '_')));
                             if (tbvariable is not null)
                             {
-                                var error = CreateUserVariable(id, v.Id, StringToDecimal(tbvariable));
+                                var error = CreateUserVariable(id, v.Id, Convert.StringToDecimal(tbvariable));
                                 if (!error)
                                 {
                                     dbc.CommandNonQuery("ROLLBACK;");
@@ -1011,8 +975,8 @@ namespace Benutzerverwaltung
                     dbc.CommandNonQuery("BEGIN;");
                     id = 0;
                     var err = dbc.CommandNonQuery(string.Format(
-                        "INSERT INTO Benutzer (BID, Name, Vorname, Strasse, PLZ, Ort, Geburtsdatum, Eintrittsdatum) VALUES(0, '{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}');",
-                        tbusername, tbuservorname, tbuserstrasse, StringToInt(tbuserplz), tbuserort, StringToDate(tbusergeburtsdatum).ToString(), StringToDate(tbusereintrittsdatum).ToString()));
+                        "INSERT INTO Benutzer (BID, Name, Vorname, Strasse, PLZ, Ort, Geburtsdatum, Eintrittsdatum, Bezahlt) VALUES(0, '{0}', '{1}', '{2}', '{3}', '{4}', '{5}', '{6}', 0);",
+                        tbusername, tbuservorname, tbuserstrasse, Convert.StringToInt(tbuserplz), tbuserort, Convert.StringToDate(tbusergeburtsdatum).ToString(), Convert.StringToDate(tbusereintrittsdatum).ToString()));
                     if (err is not null) ErrorLogging.Log(err);
                     else
                     {
@@ -1039,7 +1003,7 @@ namespace Benutzerverwaltung
                             var tbvariable = SearchTextBoxes(string.Format("tbvariable{0}{1}", v.Id, v.Name.Replace(' ', '_')));
                             if (tbvariable is not null)
                             {
-                                var error = CreateUserVariable(id, v.Id, StringToDecimal(tbvariable));
+                                var error = CreateUserVariable(id, v.Id, Convert.StringToDecimal(tbvariable));
                                 if (!error)
                                 {
                                     dbc.CommandNonQuery("ROLLBACK;");

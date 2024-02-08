@@ -1,0 +1,30 @@
+﻿<Window x:Class="Benutzerverwaltung.PaymentWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Benutzerverwaltung"
+        mc:Ignorable="d"
+        Title="Buchen" Height="200" Width="400">
+    <Grid x:Name="MainGrid" Background="Azure">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="2*"/>
+        </Grid.ColumnDefinitions>
+        <Border BorderThickness="1" BorderBrush="Black" Background="LightSlateGray" Margin="5" Grid.Column="0" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Left">
+            <TextBlock x:Name="TBBuchen" Margin="5" Text="Betrag"/>
+        </Border>
+        <Border BorderThickness="1" BorderBrush="Black" Background="LightSlateGray" Margin="5" Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Left">
+            <TextBlock x:Name="TBUser" Margin="5"/>
+        </Border>
+        <Border BorderThickness="1" BorderBrush="Black" Background="LightSlateGray" Margin="5" Grid.Column="1" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Left">
+            <TextBox x:Name="TBBetrag" Margin="5" MinWidth="50"/>
+        </Border>
+        <Border BorderThickness="1" BorderBrush="Black" Background="LightSlateGray" Margin="5" Grid.Column="0" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left">
+            <Button x:Name="BTBuchen" Margin="5" Click="ClickBook" Content="Buchen"/>
+        </Border>
+        <Border BorderThickness="1" BorderBrush="Black" Background="LightSlateGray" Margin="5" Grid.Column="1" Grid.Row="2" VerticalAlignment="Center" HorizontalAlignment="Left">
+            <Button x:Name="BTAbbrechen" Margin="5" Click="ClickCancel" Content="Abbrechen"/>
+        </Border>
+    </Grid>
+</Window>

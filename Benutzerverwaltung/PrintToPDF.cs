@@ -227,51 +227,20 @@ namespace Benutzerverwaltung
         {
             var document = new PdfDocument();
             document.Info.Title = string.Format("Nutzer Liste");
-            var page = document.AddPage();
-            page.Size = PageSize.A4;
-            page.Orientation = PageOrientation.Landscape;
-            var gfx = XGraphics.FromPdfPage(page);
+            var gfx = NewPageUserList(document);
 
             /*      Nr      Name    Vorname Sta     Var     Sum
              *      5mm     20mm    20mm    20mm    20mm    20mm
              */
-            decimal[] colsums = new decimal[statics.Count + variables.Count + 1];
+            XRect curr = new();
+            decimal[] colsums = new decimal[statics.Count + variables.Count + 2];
             int intervally = 15;
             int intervallx = 30;
             int ix = 5;
             int iy = 5;
-            int endx = 270;
+            int endx = 250;
             int endy = 200;
-
-            XRect curr = new XRect(
-                new XPoint(MillimeterToPointHeight(ix), MillimeterToPointWidth(iy)),
-                new XPoint(MillimeterToPointHeight(ix + 5), MillimeterToPointWidth(iy + intervally)));
-            gfx.DrawString("Nr", fonttext, brush, curr, XStringFormats.CenterLeft);
-            ix += 5;
-            curr = new XRect(
-                new XPoint(MillimeterToPointHeight(ix), MillimeterToPointWidth(iy)),
-                new XPoint(MillimeterToPointHeight(ix + intervallx), MillimeterToPointWidth(iy + intervally)));
-            gfx.DrawString(" Name", fonttext, brush, curr, XStringFormats.CenterLeft);
-            ix += intervallx;
-            curr = new XRect(
-                new XPoint(MillimeterToPointHeight(ix), MillimeterToPointWidth(iy)),
-                new XPoint(MillimeterToPointHeight(ix + intervallx), MillimeterToPointWidth(iy + intervally)));
-            gfx.DrawString(" Vorname", fonttext, brush, curr, XStringFormats.CenterLeft);
-            ix += intervallx;
-            curr = new XRect(
-                new XPoint(MillimeterToPointHeight(ix), MillimeterToPointWidth(iy)),
-                new XPoint(MillimeterToPointHeight(270), MillimeterToPointWidth(iy + intervally)));
-            gfx.DrawString("Rechnungsposten", fonttext, brush, curr, XStringFormats.Center);
-            ix = 270;
-            curr = new XRect(
-                new XPoint(MillimeterToPointHeight(ix), MillimeterToPointWidth(iy)),
-                new XPoint(MillimeterToPointHeight(ix + intervallx), MillimeterToPointWidth(iy + intervally)));
-            gfx.DrawString(" Summe", fonttext, brush, curr, XStringFormats.CenterLeft);
-
             iy += intervally;
-            gfx.DrawLine(new XPen(XColors.Black),
-                new XPoint(MillimeterToPointHeight(5), MillimeterToPointWidth(iy)),
-                new XPoint(MillimeterToPointHeight(290), MillimeterToPointWidth(iy)));
 
             int col;
             int usernr = 1;
@@ -330,7 +299,7 @@ namespace Benutzerverwaltung
                         if(iy + 2 * intervally <= endy) iy += intervally;
                         else
                         {
-                            gfx = NewPageLandscape(document);
+                            gfx = NewPageUserList(document);
                             iy = 20;
                         }
                         ix = 50;
@@ -358,7 +327,7 @@ namespace Benutzerverwaltung
                         if (iy + 2 * intervally <= endy) iy += intervally;
                         else
                         {
-                            gfx = NewPageLandscape(document);
+                            gfx = NewPageUserList(document);
                             iy = 20;
                         }
                         ix = 50;
@@ -367,18 +336,23 @@ namespace Benutzerverwaltung
                 }
 
                 curr = new XRect(
+                    new XPoint(MillimeterToPointHeight(250), MillimeterToPointWidth(iy)),
+                    new XPoint(MillimeterToPointHeight(270), MillimeterToPointWidth(iy + intervally)));
+                gfx.DrawString(" " + usersum.ToString(), fonttext, brush, curr, XStringFormats.CenterLeft);
+                curr = new XRect(
                     new XPoint(MillimeterToPointHeight(270), MillimeterToPointWidth(iy)),
                     new XPoint(MillimeterToPointHeight(290), MillimeterToPointWidth(iy + intervally)));
-                gfx.DrawString(" " + usersum.ToString(), fonttext, brush, curr, XStringFormats.CenterLeft);
+                gfx.DrawString(" " + user.Bezahlt.ToString(), fonttext, brush, curr, XStringFormats.CenterLeft);
 
-                colsums[colsums.Length - 1] += usersum;
+                colsums[colsums.Length - 2] += usersum;
+                colsums[colsums.Length - 1] += user.Bezahlt;
 
                 usernr++;
 
                 if (iy + 2 * intervally <= endy) iy += intervally;
                 else
                 {
-                    gfx = NewPageLandscape(document);
+                    gfx = NewPageUserList(document);
                     iy = 20;
                 }
                 gfx.DrawLine(new XPen(XColors.Black),
@@ -409,7 +383,7 @@ namespace Benutzerverwaltung
                     if (iy + 2 * intervally <= endy) iy += intervally;
                     else
                     {
-                        gfx = NewPageLandscape(document);
+                        gfx = NewPageUserList(document);
                         iy = 20;
                     }
                     ix = 50;
@@ -432,13 +406,17 @@ namespace Benutzerverwaltung
                     if (iy + 2 * intervally <= endy) iy += intervally;
                     else
                     {
-                        gfx = NewPageLandscape(document);
+                        gfx = NewPageUserList(document);
                         iy = 20;
                     }
                     ix = 50;
                 }
                 col++;
             }
+            curr = new XRect(
+                    new XPoint(MillimeterToPointHeight(250), MillimeterToPointWidth(iy)),
+                    new XPoint(MillimeterToPointHeight(270), MillimeterToPointWidth(iy + intervally)));
+            gfx.DrawString(" " + colsums[colsums.Length - 2].ToString(), fonttext, brush, curr, XStringFormats.CenterLeft);
             curr = new XRect(
                     new XPoint(MillimeterToPointHeight(270), MillimeterToPointWidth(iy)),
                     new XPoint(MillimeterToPointHeight(290), MillimeterToPointWidth(iy + intervally)));
@@ -463,7 +441,7 @@ namespace Benutzerverwaltung
             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(file) { UseShellExecute = true });
         }
 
-        private static XGraphics NewPageLandscape(PdfDocument document)
+        private static XGraphics NewPageUserList(PdfDocument document)
         {
             var page = document.AddPage();
             page.Size = PageSize.A4;
@@ -472,23 +450,27 @@ namespace Benutzerverwaltung
             XRect curr = new XRect(
                 new XPoint(MillimeterToPointHeight(5), MillimeterToPointWidth(5)),
                 new XPoint(MillimeterToPointHeight(10), MillimeterToPointWidth(20)));
-            gfx.DrawString("Nr", fonttext, brush, curr, XStringFormats.CenterLeft);
+            gfx.DrawString(" Nr", fonttext, brush, curr, XStringFormats.CenterLeft);
             curr = new XRect(
                 new XPoint(MillimeterToPointHeight(10), MillimeterToPointWidth(5)),
                 new XPoint(MillimeterToPointHeight(40), MillimeterToPointWidth(20)));
-            gfx.DrawString("Name", fonttext, brush, curr, XStringFormats.CenterLeft);
+            gfx.DrawString(" Name", fonttext, brush, curr, XStringFormats.CenterLeft);
             curr = new XRect(
                 new XPoint(MillimeterToPointHeight(40), MillimeterToPointWidth(5)),
                 new XPoint(MillimeterToPointHeight(70), MillimeterToPointWidth(20)));
-            gfx.DrawString("Vorname", fonttext, brush, curr, XStringFormats.CenterLeft);
+            gfx.DrawString(" Vorname", fonttext, brush, curr, XStringFormats.CenterLeft);
             curr = new XRect(
                 new XPoint(MillimeterToPointHeight(70), MillimeterToPointWidth(5)),
+                new XPoint(MillimeterToPointHeight(250), MillimeterToPointWidth(20)));
+            gfx.DrawString(" Rechnungsposten", fonttext, brush, curr, XStringFormats.CenterLeft);
+            curr = new XRect(
+                new XPoint(MillimeterToPointHeight(250), MillimeterToPointWidth(5)),
                 new XPoint(MillimeterToPointHeight(270), MillimeterToPointWidth(20)));
-            gfx.DrawString("Rechnungsposten", fonttext, brush, curr, XStringFormats.CenterLeft);
+            gfx.DrawString(" Summe", fonttext, brush, curr, XStringFormats.CenterLeft);
             curr = new XRect(
                 new XPoint(MillimeterToPointHeight(270), MillimeterToPointWidth(5)),
                 new XPoint(MillimeterToPointHeight(290), MillimeterToPointWidth(20)));
-            gfx.DrawString("Summe", fonttext, brush, curr, XStringFormats.CenterLeft);
+            gfx.DrawString(" Bezahlt", fonttext, brush, curr, XStringFormats.CenterLeft);
             gfx.DrawLine(new XPen(XColors.Black),
                 new XPoint(MillimeterToPointHeight(5), MillimeterToPointWidth(20)),
                 new XPoint(MillimeterToPointHeight(290), MillimeterToPointWidth(20)));

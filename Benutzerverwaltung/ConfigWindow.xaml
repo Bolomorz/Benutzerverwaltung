@@ -21,15 +21,17 @@
             <TextBlock x:Name="TBView" Margin="5"/>
         </Border>
         <Border BorderThickness="1" BorderBrush="Black" Background="LightSlateGray" Margin="5" Grid.Column="1" Grid.Row="1">
-            <Grid x:Name="ControlsGrid" Margin="5">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="3*"/>
-                </Grid.ColumnDefinitions>
-            </Grid>
+            <ScrollViewer VerticalScrollBarVisibility="Visible">
+                <Grid x:Name="ControlsGrid" Margin="5">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="3*"/>
+                    </Grid.ColumnDefinitions>
+                </Grid>
+            </ScrollViewer>
         </Border>
         <Border BorderThickness="1" BorderBrush="Black" Background="LightSlateGray" Margin="5" Grid.Column="1" Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Center">
-            <Button Margin="5" Click="ClickCancel">Abbrechen</Button> 
+            <Button x:Name="BTAbbrechen" Margin="5" Click="ClickCancel">Abbrechen</Button> 
         </Border>
     </Grid>
 </Window>

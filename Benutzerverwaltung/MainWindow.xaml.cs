@@ -61,8 +61,7 @@ namespace Benutzerverwaltung
             searchtext = null;
             TBSearch.Text = string.Empty;
             TBView.Text = "Aktuelle Ansicht: Gesamt";
-            LoadData();
-            LoadControls();
+            Reload();
             if (!Directory.Exists("Rechnungen")) Directory.CreateDirectory("Rechnungen");
             if (!Directory.Exists("NutzerListen")) Directory.CreateDirectory("NutzerListen");
             if (Capabilities.Build.IsCoreBuild) GlobalFontSettings.FontResolver = new FailsafeFontResolver();
@@ -70,8 +69,41 @@ namespace Benutzerverwaltung
 
         public void Reload()
         {
+            MainGrid.ShowGridLines = Settings.Default.ShowGridLines;
+            MainGrid.RowDefinitions.Clear();
+            MainGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightMedium, GridUnitType.Pixel) });
+            MainGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightMedium, GridUnitType.Pixel) });
+            MainGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightMedium, GridUnitType.Pixel) });
+            MainGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightMedium, GridUnitType.Pixel) });
+            MainGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightMedium, GridUnitType.Pixel) });
+            MainGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightMedium, GridUnitType.Pixel) });
+            MainGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightMedium, GridUnitType.Pixel) });
+            MainGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightMedium, GridUnitType.Pixel) });
+            MainGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightMedium, GridUnitType.Pixel) });
+            this.Height = 10 * Settings.Default.HeightMedium;
             LoadData();
             LoadControls();
+            FontFamily ff = new FontFamily(Settings.Default.FontFamily);
+            BTB.FontFamily = ff;
+            BTB.FontSize = Settings.Default.FontSize;
+            BTG.FontFamily = ff;
+            BTG.FontSize = Settings.Default.FontSize;
+            BTAJ.FontSize = Settings.Default.FontSize;
+            BTAJ.FontFamily = ff;
+            BTJ.FontSize = Settings.Default.FontSize;
+            BTJ.FontFamily = ff;
+            BTSP.FontFamily = ff;
+            BTSP.FontSize = Settings.Default.FontSize;
+            BTVP.FontFamily = ff;
+            BTVP.FontSize = Settings.Default.FontSize;
+            TBSearch.FontSize = Settings.Default.FontSize;
+            TBView.FontSize = Settings.Default.FontSize;
+            TBSuchen.FontSize = Settings.Default.FontSize;
+            TBSearch.FontFamily = ff;
+            TBView.FontFamily = ff;
+            TBSuchen.FontFamily = ff;
+            BTS.FontFamily = ff;
+            BTS.FontSize = Settings.Default.FontSize;
         }
 
         private void LoadData()
@@ -256,28 +288,28 @@ namespace Benutzerverwaltung
 
         private void WriteStatics(List<Static> s, int rows)
         {
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(100, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(200, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(150, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(150, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(100, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(100, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthShort, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthLong, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthMedium, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthMedium, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthShort, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthShort, GridUnitType.Pixel) });
 
-            for(int i = 0; i < rows; i++) DataGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });
+            for(int i = 0; i < rows; i++) DataGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightShort, GridUnitType.Pixel) });
 
             CreateTextBlock("Nummer", 0, 0, HorizontalAlignment.Left);
-            CreateTextBlock("Name", 1, 0, HorizontalAlignment.Left, 200);
-            CreateTextBlock("Wert", 2, 0, HorizontalAlignment.Left, 150);
-            CreateTextBlock("standartmäßig aktiv?", 3, 0, HorizontalAlignment.Left, 150);
+            CreateTextBlock("Name", 1, 0, HorizontalAlignment.Left, Settings.Default.WidthLong);
+            CreateTextBlock("Wert", 2, 0, HorizontalAlignment.Left, Settings.Default.WidthMedium);
+            CreateTextBlock("standartmäßig aktiv?", 3, 0, HorizontalAlignment.Left, Settings.Default.WidthMedium);
             CreateTextBlock("Löschen", 4, 0, HorizontalAlignment.Center);
             CreateTextBlock("Ändern", 5, 0, HorizontalAlignment.Center);
             int row = 1;
             foreach(var st in s)
             {
                 CreateTextBlock(row.ToString(), 0, row, HorizontalAlignment.Left);
-                CreateTextBlock(st.Name, 1, row, HorizontalAlignment.Left, 200);
-                CreateTextBlock(st.Wert.ToString(), 2, row, HorizontalAlignment.Center, 150);
-                if (st.Default) CreateTextBlock("Ja", 3, row, HorizontalAlignment.Center, 150); else CreateTextBlock("Nein", 3, row, HorizontalAlignment.Center, 150);
+                CreateTextBlock(st.Name, 1, row, HorizontalAlignment.Left, Settings.Default.WidthLong);
+                CreateTextBlock(st.Wert.ToString(), 2, row, HorizontalAlignment.Center, Settings.Default.WidthMedium);
+                if (st.Default) CreateTextBlock("Ja", 3, row, HorizontalAlignment.Center, Settings.Default.WidthMedium); else CreateTextBlock("Nein", 3, row, HorizontalAlignment.Center, Settings.Default.WidthMedium);
                 CreateButton("X", 4, row, st.Id, View.StatischePosten, Mode.Delete, null, HorizontalAlignment.Center);
                 CreateButton("...", 5, row, st.Id, View.StatischePosten, Mode.Administrate, null, HorizontalAlignment.Center);
                 row++;
@@ -286,31 +318,31 @@ namespace Benutzerverwaltung
         }
         private void WriteUsers(List<User> u, int rows)
         {
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(100, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(200, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(200, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(200, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(100, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(200, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(200, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(200, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(200, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(100, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(100, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(100, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthShort, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthLong, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthLong, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthLong, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthShort, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthLong, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthLong, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthLong, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthLong, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthShort, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthShort, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthShort, GridUnitType.Pixel) });
 
-            for (int i = 0; i < rows; i++) DataGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });
+            for (int i = 0; i < rows; i++) DataGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightShort, GridUnitType.Pixel) });
 
-            CreateTextBlock("Nummer", 0, 0, HorizontalAlignment.Left); CreateTextBlock("Name", 1, 0, HorizontalAlignment.Left, 200); CreateTextBlock("Vorname", 2, 0, HorizontalAlignment.Left, 200); CreateTextBlock("Strasse", 3, 0, HorizontalAlignment.Left, 200);
-            CreateTextBlock("PLZ", 4, 0, HorizontalAlignment.Left); CreateTextBlock("Ort", 5, 0, HorizontalAlignment.Left, 200); CreateTextBlock("Geburtsdatum", 6, 0, HorizontalAlignment.Left, 200); CreateTextBlock("Eintrittsdatum", 7, 0, HorizontalAlignment.Left, 200);
-            CreateTextBlock("Bezahlt", 8, 0, HorizontalAlignment.Left, 200); CreateTextBlock("Buchen", 9, 0, HorizontalAlignment.Center); CreateTextBlock("Löschen", 10, 0, HorizontalAlignment.Center); CreateTextBlock("Ändern", 11, 0, HorizontalAlignment.Center);
+            CreateTextBlock("Nummer", 0, 0, HorizontalAlignment.Left); CreateTextBlock("Name", 1, 0, HorizontalAlignment.Left, Settings.Default.WidthLong); CreateTextBlock("Vorname", 2, 0, HorizontalAlignment.Left, Settings.Default.WidthLong); CreateTextBlock("Strasse", 3, 0, HorizontalAlignment.Left, Settings.Default.WidthLong);
+            CreateTextBlock("PLZ", 4, 0, HorizontalAlignment.Left); CreateTextBlock("Ort", 5, 0, HorizontalAlignment.Left, Settings.Default.WidthLong); CreateTextBlock("Geburtsdatum", 6, 0, HorizontalAlignment.Left, Settings.Default.WidthLong); CreateTextBlock("Eintrittsdatum", 7, 0, HorizontalAlignment.Left, Settings.Default.WidthLong);
+            CreateTextBlock("Bezahlt", 8, 0, HorizontalAlignment.Left, Settings.Default.WidthLong); CreateTextBlock("Buchen", 9, 0, HorizontalAlignment.Center); CreateTextBlock("Löschen", 10, 0, HorizontalAlignment.Center); CreateTextBlock("Ändern", 11, 0, HorizontalAlignment.Center);
             int row = 1;
             foreach(var user in u)
             {
                 CreateTextBlock(row.ToString(), 0, row, HorizontalAlignment.Left);
-                CreateTextBlock(user.Name, 1, row, HorizontalAlignment.Left, 200); CreateTextBlock(user.Vorname, 2, row, HorizontalAlignment.Left, 200); CreateTextBlock(user.Strasse, 3, row, HorizontalAlignment.Left, 200); CreateTextBlock(user.PLZ.ToString(), 4, row, HorizontalAlignment.Left);
-                CreateTextBlock(user.Ort, 5, row, HorizontalAlignment.Left, 200); CreateTextBlock(user.Geburtstag.ToString(), 6, row, HorizontalAlignment.Left, 200); CreateTextBlock(user.Eintrittsdatum.ToString(), 7, row, HorizontalAlignment.Left, 200);
-                CreateTextBlock(user.Bezahlt.ToString(), 8, row, HorizontalAlignment.Center, 200);
+                CreateTextBlock(user.Name, 1, row, HorizontalAlignment.Left, Settings.Default.WidthLong); CreateTextBlock(user.Vorname, 2, row, HorizontalAlignment.Left, Settings.Default.WidthLong); CreateTextBlock(user.Strasse, 3, row, HorizontalAlignment.Left, Settings.Default.WidthLong); CreateTextBlock(user.PLZ.ToString(), 4, row, HorizontalAlignment.Left);
+                CreateTextBlock(user.Ort, 5, row, HorizontalAlignment.Left, Settings.Default.WidthLong); CreateTextBlock(user.Geburtstag.ToString(), 6, row, HorizontalAlignment.Left, Settings.Default.WidthLong); CreateTextBlock(user.Eintrittsdatum.ToString(), 7, row, HorizontalAlignment.Left, Settings.Default.WidthLong);
+                CreateTextBlock(user.Bezahlt.ToString(), 8, row, HorizontalAlignment.Center, Settings.Default.WidthLong);
                 CreateButton("B", 9, row, user.Id, View.Benutzer, Mode.Payment, user, HorizontalAlignment.Center);
                 CreateButton("X", 10, row, user.Id, View.Benutzer, Mode.Delete, user, HorizontalAlignment.Center);
                 CreateButton("...", 11, row, user.Id, View.Benutzer, Mode.Administrate, user, HorizontalAlignment.Center);
@@ -320,28 +352,28 @@ namespace Benutzerverwaltung
         }
         private void WriteVariables(List<Variable> v, int rows)
         {
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(100, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(200, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(150, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(150, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(100, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(100, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthShort, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthLong, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthMedium, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthMedium, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthShort, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthShort, GridUnitType.Pixel) });
 
-            for (int i = 0; i < rows; i++) DataGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });
+            for (int i = 0; i < rows; i++) DataGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightShort, GridUnitType.Pixel) });
 
             CreateTextBlock("Nummer", 0, 0, HorizontalAlignment.Left);
-            CreateTextBlock("Name", 1, 0, HorizontalAlignment.Left, 200);
-            CreateTextBlock("Formel", 2, 0, HorizontalAlignment.Left, 150);
-            CreateTextBlock("StandartWert", 3, 0, HorizontalAlignment.Left, 150);
+            CreateTextBlock("Name", 1, 0, HorizontalAlignment.Left, Settings.Default.WidthLong);
+            CreateTextBlock("Formel", 2, 0, HorizontalAlignment.Left, Settings.Default.WidthMedium);
+            CreateTextBlock("StandartWert", 3, 0, HorizontalAlignment.Left, Settings.Default.WidthMedium);
             CreateTextBlock("Löschen", 4, 0, HorizontalAlignment.Center);
             CreateTextBlock("Ändern", 5, 0, HorizontalAlignment.Center);
             int row = 1;
             foreach(var variable in v)
             {
                 CreateTextBlock(row.ToString(), 0, row, HorizontalAlignment.Left);
-                CreateTextBlock(variable.Name, 1, row, HorizontalAlignment.Left, 200);
-                CreateTextBlock(variable.Formel, 2, row, HorizontalAlignment.Center, 150);
-                CreateTextBlock(variable.Default.ToString(), 3, row, HorizontalAlignment.Center, 150);
+                CreateTextBlock(variable.Name, 1, row, HorizontalAlignment.Left, Settings.Default.WidthLong);
+                CreateTextBlock(variable.Formel, 2, row, HorizontalAlignment.Center, Settings.Default.WidthMedium);
+                CreateTextBlock(variable.Default.ToString(), 3, row, HorizontalAlignment.Center, Settings.Default.WidthMedium);
                 CreateButton("X", 4, row, variable.Id, View.VariablePosten, Mode.Delete, null, HorizontalAlignment.Center);
                 CreateButton("...", 5, row, variable.Id, View.VariablePosten, Mode.Administrate, null, HorizontalAlignment.Center);
                 row++;
@@ -350,22 +382,22 @@ namespace Benutzerverwaltung
         }
         private void WriteJubs(List<Jubilaeum> j, int rows)
         {
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(100, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(200, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(100, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(100, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthShort, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthLong, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthShort, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthShort, GridUnitType.Pixel) });
 
-            for (int i = 0; i < rows; i++) DataGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });
+            for (int i = 0; i < rows; i++) DataGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightShort, GridUnitType.Pixel) });
 
             CreateTextBlock("Nummer", 0, 0, HorizontalAlignment.Left);
-            CreateTextBlock("Jahre", 1, 0, HorizontalAlignment.Left, 200);
+            CreateTextBlock("Jahre", 1, 0, HorizontalAlignment.Left, Settings.Default.WidthLong);
             CreateTextBlock("Löschen", 2, 0, HorizontalAlignment.Center);
             CreateTextBlock("Ändern", 3, 0, HorizontalAlignment.Center);
             int row = 1;
             foreach(var jub in j)
             {
                 CreateTextBlock(row.ToString(), 0, row, HorizontalAlignment.Left);
-                CreateTextBlock(jub.Jahre.ToString(), 1, row, HorizontalAlignment.Center, 200);
+                CreateTextBlock(jub.Jahre.ToString(), 1, row, HorizontalAlignment.Center, Settings.Default.WidthLong);
                 CreateButton("X", 2, row, jub.Id, View.Jubilaeen, Mode.Delete, null, HorizontalAlignment.Center);
                 CreateButton("...", 3, row, jub.Id, View.Jubilaeen, Mode.Administrate, null, HorizontalAlignment.Center);
                 row++;
@@ -374,30 +406,30 @@ namespace Benutzerverwaltung
         }
         private void WriteCurrentJubs(List<(User u, Jubilaeum j, JubilaeumMode jm)> current, int rows)
         {
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(100, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(200, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(200, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(150, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(150, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(150, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthShort, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthLong, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthLong, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthMedium, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthMedium, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthMedium, GridUnitType.Pixel) });
 
-            for (int i = 0; i < rows; i++) DataGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });
+            for (int i = 0; i < rows; i++) DataGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightShort, GridUnitType.Pixel) });
 
-            CreateTextBlock("Nummer", 0, 0, HorizontalAlignment.Left); CreateTextBlock("Name", 1, 0, HorizontalAlignment.Left, 200); CreateTextBlock("Vorname", 2, 0, HorizontalAlignment.Left, 200); CreateTextBlock("Jahre", 3, 0, HorizontalAlignment.Left, 150); CreateTextBlock("Datum", 4, 0, HorizontalAlignment.Left, 150);
-            CreateTextBlock("Art", 5, 0, HorizontalAlignment.Left, 150);
+            CreateTextBlock("Nummer", 0, 0, HorizontalAlignment.Left); CreateTextBlock("Name", 1, 0, HorizontalAlignment.Left, Settings.Default.WidthLong); CreateTextBlock("Vorname", 2, 0, HorizontalAlignment.Left, Settings.Default.WidthLong); CreateTextBlock("Jahre", 3, 0, HorizontalAlignment.Left, Settings.Default.WidthMedium); CreateTextBlock("Datum", 4, 0, HorizontalAlignment.Left, Settings.Default.WidthMedium);
+            CreateTextBlock("Art", 5, 0, HorizontalAlignment.Left, Settings.Default.WidthMedium);
             int row = 1;
             foreach(var c in current)
             {
-                CreateTextBlock(row.ToString(), 0, row, HorizontalAlignment.Left); CreateTextBlock(c.u.Name, 1, row, HorizontalAlignment.Left, 200); CreateTextBlock(c.u.Vorname, 2, row, HorizontalAlignment.Left, 200); CreateTextBlock(c.j.Jahre.ToString(), 3, row, HorizontalAlignment.Center, 150);
+                CreateTextBlock(row.ToString(), 0, row, HorizontalAlignment.Left); CreateTextBlock(c.u.Name, 1, row, HorizontalAlignment.Left, Settings.Default.WidthLong); CreateTextBlock(c.u.Vorname, 2, row, HorizontalAlignment.Left, Settings.Default.WidthLong); CreateTextBlock(c.j.Jahre.ToString(), 3, row, HorizontalAlignment.Center, Settings.Default.WidthMedium);
                 if(c.jm == JubilaeumMode.Birthday)
                 {
-                    CreateTextBlock(c.u.Geburtstag.ToString(), 4, row, HorizontalAlignment.Center, 150);
-                    CreateTextBlock("Geburtstag", 5, row, HorizontalAlignment.Left, 150);
+                    CreateTextBlock(c.u.Geburtstag.ToString(), 4, row, HorizontalAlignment.Center, Settings.Default.WidthMedium);
+                    CreateTextBlock("Geburtstag", 5, row, HorizontalAlignment.Left, Settings.Default.WidthMedium);
                 }
                 else
                 {
-                    CreateTextBlock(c.u.Eintrittsdatum.ToString(), 4, row, HorizontalAlignment.Center, 150);
-                    CreateTextBlock("Eintrittsdatum", 5, row, HorizontalAlignment.Left, 150);
+                    CreateTextBlock(c.u.Eintrittsdatum.ToString(), 4, row, HorizontalAlignment.Center, Settings.Default.WidthMedium);
+                    CreateTextBlock("Eintrittsdatum", 5, row, HorizontalAlignment.Left, Settings.Default.WidthMedium);
                 }
                 row++;
             }
@@ -406,25 +438,25 @@ namespace Benutzerverwaltung
         {
             int rows = lu.Count + 2;
             int cols = 2 + ls.Count + lv.Count + 5;
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(100, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(200, GridUnitType.Pixel) });
-            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(200, GridUnitType.Pixel) });
-            for (int i = 2; i < cols; i++) DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(150, GridUnitType.Pixel) });
-            for (int i = 0; i < rows; i++) DataGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(50, GridUnitType.Pixel) });
-            CreateTextBlock("Nummer", 0, 0, HorizontalAlignment.Left); CreateTextBlock("Name", 1, 0, HorizontalAlignment.Left, 200); CreateTextBlock("Vorname", 2, 0, HorizontalAlignment.Left, 200);
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthShort, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthLong, GridUnitType.Pixel) });
+            DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthLong, GridUnitType.Pixel) });
+            for (int i = 2; i < cols; i++) DataGrid.ColumnDefinitions.Add(new ColumnDefinition() { Width = new GridLength(Settings.Default.WidthMedium, GridUnitType.Pixel) });
+            for (int i = 0; i < rows; i++) DataGrid.RowDefinitions.Add(new RowDefinition() { Height = new GridLength(Settings.Default.HeightShort, GridUnitType.Pixel) });
+            CreateTextBlock("Nummer", 0, 0, HorizontalAlignment.Left); CreateTextBlock("Name", 1, 0, HorizontalAlignment.Left, Settings.Default.WidthLong); CreateTextBlock("Vorname", 2, 0, HorizontalAlignment.Left, Settings.Default.WidthLong);
             decimal[] sums = new decimal[cols - 2];
             int col = 3;
-            foreach (var s in ls) { CreateTextBlock(s.Name, col, 0, HorizontalAlignment.Left, 150); col++; sums[col] = 0; }
-            foreach (var v in lv) { CreateTextBlock(v.Name, col, 0, HorizontalAlignment.Left, 150); col++; sums[col] = 0; }
-            CreateTextBlock("Gesamt", col, 0, HorizontalAlignment.Left, 150); sums[col] = 0;
-            CreateTextBlock("Bezahlt", col + 1, 0, HorizontalAlignment.Left, 150);
-            CreateTextBlock("Buchen", col + 2, 0, HorizontalAlignment.Center, 150);
-            CreateTextBlock("Bearbeiten", col + 3, 0, HorizontalAlignment.Center, 150);
-            CreateTextBlock("Rechnung", col + 4, 0, HorizontalAlignment.Center, 150);
+            foreach (var s in ls) { CreateTextBlock(s.Name, col, 0, HorizontalAlignment.Left, Settings.Default.WidthMedium); col++; sums[col] = 0; }
+            foreach (var v in lv) { CreateTextBlock(v.Name, col, 0, HorizontalAlignment.Left, Settings.Default.WidthMedium); col++; sums[col] = 0; }
+            CreateTextBlock("Gesamt", col, 0, HorizontalAlignment.Left, Settings.Default.WidthMedium); sums[col] = 0;
+            CreateTextBlock("Bezahlt", col + 1, 0, HorizontalAlignment.Left, Settings.Default.WidthMedium);
+            CreateTextBlock("Buchen", col + 2, 0, HorizontalAlignment.Center, Settings.Default.WidthMedium);
+            CreateTextBlock("Bearbeiten", col + 3, 0, HorizontalAlignment.Center, Settings.Default.WidthMedium);
+            CreateTextBlock("Rechnung", col + 4, 0, HorizontalAlignment.Center, Settings.Default.WidthMedium);
             int row = 1;
             foreach(var u in lu)
             {
-                CreateTextBlock(row.ToString(), 0, row, HorizontalAlignment.Left); CreateTextBlock(u.Name, 1, row, HorizontalAlignment.Left, 200); CreateTextBlock(u.Vorname, 2, row, HorizontalAlignment.Left, 200);
+                CreateTextBlock(row.ToString(), 0, row, HorizontalAlignment.Left); CreateTextBlock(u.Name, 1, row, HorizontalAlignment.Left, Settings.Default.WidthLong); CreateTextBlock(u.Vorname, 2, row, HorizontalAlignment.Left, Settings.Default.WidthLong);
                 decimal sum = 0;
                 col = 3;
                 foreach(var s in ls)
@@ -435,13 +467,13 @@ namespace Benutzerverwaltung
                         {
                             if (us.b)
                             {
-                                CreateTextBlock(s.Wert.ToString(), col, row, HorizontalAlignment.Center, 150);
+                                CreateTextBlock(s.Wert.ToString(), col, row, HorizontalAlignment.Center, Settings.Default.WidthMedium);
                                 sums[col] += s.Wert;
                                 sum += s.Wert;
                             }
                             else
                             {
-                                CreateTextBlock("-", col, row, HorizontalAlignment.Center, 150);
+                                CreateTextBlock("-", col, row, HorizontalAlignment.Center, Settings.Default.WidthMedium);
                             }
                         }
                     }
@@ -453,18 +485,18 @@ namespace Benutzerverwaltung
                     {
                         if(v == uv.v)
                         {
-                            CreateTextBlock(uv.w.ToString(), col, row, HorizontalAlignment.Left, 150);
-                            CreateTextBlock("-->", col, row, HorizontalAlignment.Center, 150);
+                            CreateTextBlock(uv.w.ToString(), col, row, HorizontalAlignment.Left, Settings.Default.WidthMedium);
+                            CreateTextBlock("-->", col, row, HorizontalAlignment.Center, Settings.Default.WidthMedium);
                             var calc = uv.v.CalcValue(uv.w);
-                            CreateTextBlock(calc.ToString(), col, row, HorizontalAlignment.Right, 150);
+                            CreateTextBlock(calc.ToString(), col, row, HorizontalAlignment.Right, Settings.Default.WidthMedium);
                             sums[col] += calc;
                             sum += calc;
                         }
                     }
                     col++;
                 }
-                CreateTextBlock(sum.ToString(), col, row, HorizontalAlignment.Center, 150);
-                CreateTextBlock(u.Bezahlt.ToString(), col + 1, row, HorizontalAlignment.Center, 150);
+                CreateTextBlock(sum.ToString(), col, row, HorizontalAlignment.Center, Settings.Default.WidthMedium);
+                CreateTextBlock(u.Bezahlt.ToString(), col + 1, row, HorizontalAlignment.Center, Settings.Default.WidthMedium);
                 CreateButton("B", col + 2, row, u.Id, View.GesamtAktuell, Mode.Payment, u, HorizontalAlignment.Center); 
                 CreateButton("...", col + 3, row, u.Id, View.GesamtAktuell, Mode.Administrate, u, HorizontalAlignment.Center);
                 CreateButton("R", col + 4, row, u.Id, View.GesamtAktuell, Mode.CreateInvoice, u, HorizontalAlignment.Center);
@@ -472,10 +504,10 @@ namespace Benutzerverwaltung
                 sums[col + 1] += u.Bezahlt;
                 row++;
             }
-            CreateTextBlock("Summe", 2, row, HorizontalAlignment.Left, 200);
+            CreateTextBlock("Summe", 2, row, HorizontalAlignment.Left, Settings.Default.WidthLong);
             for(col = 3; col < sums.Length; col++)
             {
-                CreateTextBlock(sums[col].ToString(), col, row, HorizontalAlignment.Center, 150);
+                CreateTextBlock(sums[col].ToString(), col, row, HorizontalAlignment.Center, Settings.Default.WidthMedium);
             }
             CreateButton("Liste Drucken", 1, row + 1, 0, View.GesamtAktuell, Mode.CreateListFile, null, HorizontalAlignment.Left, lu);
         }
@@ -488,7 +520,9 @@ namespace Benutzerverwaltung
                 Text = text,
                 Foreground = Brushes.White,
                 HorizontalAlignment = alignment,
-                VerticalAlignment = VerticalAlignment.Center
+                VerticalAlignment = VerticalAlignment.Center,
+                FontFamily = new FontFamily(Settings.Default.FontFamily),
+                FontSize = Settings.Default.FontSize,
             };
             Border b = new Border()
             {
@@ -512,6 +546,8 @@ namespace Benutzerverwaltung
                 Tag = vt,
                 Background = (mode == Mode.Delete) ? DeleteBackground : (mode == Mode.CreateNew) ? CreateBackground : (mode == Mode.Administrate) ? AdminBackground : SaveBackground,
                 Foreground = (mode == Mode.Delete) ? DeleteForeground : (mode == Mode.CreateNew) ? CreateForeground : (mode == Mode.Administrate) ? AdminForeground : SaveForeground,
+                FontFamily = new FontFamily(Settings.Default.FontFamily),
+                FontSize = Settings.Default.FontSize,
             };
             bt.Click += ClickButton;
             Border bd = new Border()
@@ -671,6 +707,11 @@ namespace Benutzerverwaltung
                 LoadControls();
             }
         }
+        private void ClickSettings(object sender, RoutedEventArgs e)
+        {
+            SettingsWindow child = new SettingsWindow(this);
+            child.Show();
+        }
 
         private void ClickButton(object sender, RoutedEventArgs e)
         {
@@ -688,6 +729,7 @@ namespace Benutzerverwaltung
                     SaveToPDF(btinfo.mode, btinfo.user, btinfo.users);
                     break;
                 case Mode.Payment:
+                    if(btinfo.user is not null) Payment(btinfo.user);
                     break;
                 default:
                     Admin(btinfo.id, btinfo.view, btinfo.mode, btinfo.user);
@@ -695,6 +737,11 @@ namespace Benutzerverwaltung
             }
         }
 
+        private void Payment(User user)
+        {
+            PaymentWindow child = new PaymentWindow(this, user, dbc);
+            child.Show();
+        }
         private void Delete(int id, View view)
         {
             DataBaseConnection.QueryList query = new DataBaseConnection.QueryList();
