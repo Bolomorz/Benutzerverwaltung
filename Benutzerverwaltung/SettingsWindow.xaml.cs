@@ -19,6 +19,7 @@ namespace Benutzerverwaltung
     /// </summary>
     public partial class SettingsWindow : Window
     {
+        MainWindow parent;
         public SettingsWindow(MainWindow _parent)
         {
             InitializeComponent();
@@ -67,6 +68,8 @@ namespace Benutzerverwaltung
             TBHS.Text = Settings.Default.HeightShort.ToString();
             TBHM.Text = Settings.Default.HeightMedium.ToString();
             TBHL.Text = Settings.Default.HeightLong.ToString();
+
+            parent = _parent;
         }
 
         private void ClickAccept(object sender, RoutedEventArgs e)
@@ -81,6 +84,7 @@ namespace Benutzerverwaltung
             Settings.Default.HeightMedium = Convert.StringToInt(TBHM.Text);
             Settings.Default.HeightLong = Convert.StringToInt(TBHL.Text);
             Settings.Default.Save();
+            parent.Reload();
             this.Close();
         }
 
